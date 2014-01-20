@@ -459,7 +459,21 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 
 	@Override
 	public void disconnect() {
-		// TODO Auto-generated method stub
+		manager.removeGroup(channel, new ActionListener(){
+
+			@Override
+			public void onFailure(int arg0) {
+				Toast.makeText(activity, "disconection failed.", Toast.LENGTH_SHORT).show();
+				
+			}
+
+			@Override
+			public void onSuccess() {
+				Toast.makeText(activity, "Disconected", Toast.LENGTH_SHORT).show();
+				
+			}
+			
+		});
 		
 	}
 }
