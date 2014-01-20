@@ -74,7 +74,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
 			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 					int arg2, long arg3) {
 				((DeviceActionListener)getActivity()).disconnect();
-				return false;
+				return true;
 			}
 			
 		});
