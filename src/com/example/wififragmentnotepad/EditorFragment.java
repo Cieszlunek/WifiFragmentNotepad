@@ -31,10 +31,10 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	public String fileName;
 	private boolean pressed_enter = false;
 	
-	private Socket socket = null;
-	private boolean socket_is_not_null = false;
-	
-	private SendThread sendThread;
+	//private Socket socket = null;
+	//private boolean socket_is_not_null = false;
+	private TcpipWriteThread sendThread = null;
+	//private SendThread sendThread;
 
 	
 	private int previous_text_length;
@@ -74,12 +74,15 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             	{
             		if(!pressed_enter)
             		{
-            			Log.i("Key pressed", "enter");
             			int pos = editText.getSelectionStart();
             			editText.append("\n");
-            			if(socket_is_not_null)
+            			if(sendThread != null)
             			{
-            				boolean zmienna = sendThread.TrySendData("Enter," + pos);
+            				sendThread.TrySendData("Enter," + pos);
+            			}
+            			else
+            			{
+            				Log.i("Key pressed", "enter");
             			}
             			pressed_enter = true;
             			return true;
@@ -103,7 +106,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	public void onPause() {
 		//super onPause();
 		saveStringToFile(fileName, editText.getText().toString());
-		if(socket_is_not_null)
+		if(sendThread != null)
 		{
 			sendThread.Stop();
 		}
@@ -113,9 +116,9 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	@Override
 	public void onResume()
 	{
-		if(socket_is_not_null)
+		if(sendThread != null)
 		{
-			sendThread = new SendThread("thread1", socket);
+			sendThread.run();
 		}
 		super.onResume();
 	}
@@ -144,7 +147,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		@Override
 		public void onTextChanged(CharSequence arg0, int arg1, int arg2,
 				int arg3) {
-			if(socket_is_not_null)
+			if(sendThread != null)
 			{
 				int temp = arg1 + arg3;
 				if(temp > previous_text_length)
@@ -233,21 +236,21 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		//LoadFile();
 	}
 
-	public void SetConnection(Socket s)
-	{
-		//if(!s.equals(null))
-		//{
-			socket = s;
-			socket_is_not_null = true;
-			sendThread = new SendThread("thread1", socket);
-        	boolean zmienna = sendThread.TrySendData("Witam, tutaj Android ^,,^");
-		//}
+
+
+	@Override
+	public void SetConnection(TcpipWriteThread th) {
+		sendThread = th;
 	}
+
+
+
+
 }
 
 
 
-
+/*
 //thread class to communicate over sockets
 class SendThread implements Runnable {
 
@@ -307,9 +310,10 @@ class SendThread implements Runnable {
 		RUN = false;
 	}
 	
-	/*-----------------------Do funkcji podajesz stringa do wys³ania - je¿eli zwróci true -> dane zosta³y dopisane do wys³ania, false -> nie mo¿na dopisaæ, 
-	 * trzeba wys³aæ ca³y plik przy nastêpnym po³¹czeniu
-	 */
+	
+	//-----------------------Do funkcji podajesz stringa do wys³ania - je¿eli zwróci true -> dane zosta³y dopisane do wys³ania, false -> nie mo¿na dopisaæ, 
+	// trzeba wys³aæ ca³y plik przy nastêpnym po³¹czeniu
+	//
 	public boolean TrySendData(String str)
 	{
 		int len;
@@ -338,3 +342,4 @@ class SendThread implements Runnable {
 	}
 	
 }
+*/

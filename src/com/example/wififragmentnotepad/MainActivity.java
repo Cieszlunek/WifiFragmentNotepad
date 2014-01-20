@@ -41,6 +41,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	private Socket socket = null;
 	private String log = "";
 	private DatabaseHelper databaseHelper;
+	private TcpipWriteThread TcpipThread;
 	
 	
     @Override
@@ -137,10 +138,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	{
     		editorFragment = new EditorFragment();
     		editorFragment.GoToEditorFragment(fileName);
-    		if(connected)
-    		{
-    			editorFragment.SetConnection(socket);
-    		}
+    		editorFragment.SetConnection(TcpipThread);
         	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
         	fragmentTransaction.commit();
     	}
@@ -265,7 +263,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	EditorFragment editorFragment = new EditorFragment();
 		editorFragment.GoToEditorFragment(fileName);
-		editorFragment.SetConnection(socket);
+		editorFragment.SetConnection(TcpipThread);
     	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
     	fragmentTransaction.commit();
     	editing = true;
@@ -292,7 +290,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     
 	private void TcpIpConnectionType()
 	{
-		TcpipWriteThread TcpipThread = new TcpipWriteThread("thread1", log, "192.168.1.100", 8888, activity);
+		TcpipThread = new TcpipWriteThread("thread1", log, "192.168.1.100", 8888, activity);
 	}
 	private void WifiDirectConnectionType()
 	{
@@ -363,8 +361,12 @@ class TcpipWriteThread implements Runnable {
 	private String IP;
 	private int port;
 	private Socket kkSocket;
-	private boolean resetLog = false;
-	private SocketsInterface si;
+	private SocketsInterface si;//tym interfejsem przesy³amy dane do MainActivity
+	private boolean GO = true;
+	public Object ToLock = new Object();//synchronizacja w¹tków
+	private String data_to_send = "";
+	
+	
 	
 	public TcpipWriteThread(String threadName, String logg, String IPP, int portt, Activity a)
 	{
@@ -400,10 +402,25 @@ class TcpipWriteThread implements Runnable {
 					}
 				}
 			}
+			si.resetLog("reset");
+			while(GO)
+			{
+				//send data
+				synchronized(ToLock)
+				{
+					if( !("").equals(data_to_send) )
+					{
+						out.println(data_to_send);
+						out.flush();
+						data_to_send = "";
+					}
+				}
+				Thread.sleep(300);//¿eby metoda TrySendData mia³a siê jak wstrzeliæ
+			}
+			
 			
 			out.close();
-			si.setSocket(kkSocket);
-			si.resetLog("reset");
+			kkSocket.close();
 		}
 		catch(Exception ex)
 		{
@@ -412,13 +429,24 @@ class TcpipWriteThread implements Runnable {
 		
 	}
 	
-	public Socket getSocket()
+	public void Stop()
 	{
-		return kkSocket;
+		GO = false;
 	}
-	public boolean ResetLog()
+	
+	public void TrySendData(String data)
 	{
-		return resetLog;
+		synchronized(ToLock)
+		{
+			if( ("").equals(data_to_send) )
+			{
+				data_to_send = data;
+			}
+			else
+			{
+				data_to_send += "\n" + data;
+			}
+		}
 	}
 	
 	
