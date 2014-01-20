@@ -6,6 +6,7 @@ import android.app.ListFragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -57,7 +58,10 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
 			public void onItemClick(AdapterView<?> arg0, View arg1, int position,
 					long arg3) {
 				WifiP2pDevice device = (WifiP2pDevice)  adapter.getItem(position);
-		        ((DeviceActionListener) getActivity()).showDetails(device);
+				WifiP2pConfig config = new WifiP2pConfig();
+				config.deviceAddress = device.deviceAddress;
+				config.wps.setup = WpsInfo.PBC;
+		        ((DeviceActionListener)getActivity()).connect(config);
 				
 			}
 		

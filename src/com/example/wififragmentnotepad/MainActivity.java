@@ -7,12 +7,15 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.wififragmentnotepad.DeviceListFragment.DeviceActionListener;
 import com.example.wififragmentnotepad.ProgramFragment.onEditEventListener;
 
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
@@ -38,7 +41,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements onEditEventListener, ConnectionInterface, SocketsInterface, ConnectionInfoListener {
+public class MainActivity extends Activity implements onEditEventListener, ConnectionInterface, SocketsInterface, ConnectionInfoListener, DeviceActionListener {
 
 	//variables
 	private Spinner spinner1;
@@ -346,8 +349,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	DeviceListFragment fragment = new DeviceListFragment();
-    	receiver = new WifiDirectBroadcastReceiver(manager, channel,
-                this, fragment);
+    	receiver = new WifiDirectBroadcastReceiver(manager, channel, this, fragment);
         registerReceiver(receiver, intentFilter);
     	fragmentTransaction.replace(R.id.fragment_layout_1, fragment);
     	fragmentTransaction.commit();
@@ -422,6 +424,43 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		String infoname = info.groupOwnerAddress.toString();
         Toast.makeText(MainActivity.this, infoname,
                 Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void showDetails(WifiP2pDevice device) {
+		
+		
+	}
+
+	@Override
+	public void cancelDisconnect() {
+		// TODO Auto-generated method stub
+		
+
+
+    }
+
+    @Override
+    public void connect(WifiP2pConfig config) {
+        manager.connect(channel, config, new ActionListener() {
+
+            @Override
+            public void onSuccess() {
+                // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
+            	Toast.makeText(activity, "Connected!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Toast.makeText(activity, "Connect failed. Retry.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+	@Override
+	public void disconnect() {
+		// TODO Auto-generated method stub
+		
 	}
 }
 
