@@ -4,9 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.example.wififragmentnotepad.ProgramFragment.onEditEventListener;
 
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pInfo;
+import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pManager.Channel;
+import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
+import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.os.Bundle;
 import android.os.Environment;
 import android.app.Activity;
@@ -14,7 +23,10 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.IntentFilter;
 import android.content.DialogInterface.OnClickListener;
 import android.text.InputType;
 import android.util.Log;
@@ -24,8 +36,9 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
-public class MainActivity extends Activity implements onEditEventListener, ConnectionInterface, SocketsInterface{
+public class MainActivity extends Activity implements onEditEventListener, ConnectionInterface, SocketsInterface, PeerListListener, ConnectionInfoListener {
 
 	//variables
 	private Spinner spinner1;
@@ -41,6 +54,23 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	private Socket socket = null;
 	private String log = "";
 	private DatabaseHelper databaseHelper;
+<<<<<<< HEAD
+<<<<<<< HEAD
+	private TcpipWriteThread TcpipThread;
+=======
+=======
+>>>>>>> 1acea9f1f6e1b33e839b50f953270faccc8fde39
+	private WifiP2pDevice device;
+	private WifiP2pManager manager;
+	private Channel channel;
+	private BroadcastReceiver receiver = null;
+	private final IntentFilter intentFilter = new IntentFilter();
+	private PeerListListener peerListListener;
+	private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+<<<<<<< HEAD
+>>>>>>> 1acea9f1f6e1b33e839b50f953270faccc8fde39
+=======
+>>>>>>> 1acea9f1f6e1b33e839b50f953270faccc8fde39
 	
 	
     @Override
@@ -51,6 +81,16 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         databaseHelper = new DatabaseHelper(this);
         LoadLog();
         CreateSpinner1();
+        
+        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+        channel = manager.initialize(this, getMainLooper(), null);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        receiver = new WifiDirectBroadcastReceiver(manager, channel,
+                this);
+        registerReceiver(receiver, intentFilter);
         
     }
 
@@ -137,10 +177,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	{
     		editorFragment = new EditorFragment();
     		editorFragment.GoToEditorFragment(fileName);
-    		if(connected)
-    		{
-    			editorFragment.SetConnection(socket);
-    		}
+    		editorFragment.SetConnection(TcpipThread);
         	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
         	fragmentTransaction.commit();
     	}
@@ -265,7 +302,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	EditorFragment editorFragment = new EditorFragment();
 		editorFragment.GoToEditorFragment(fileName);
-		editorFragment.SetConnection(socket);
+		editorFragment.SetConnection(TcpipThread);
     	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
     	fragmentTransaction.commit();
     	editing = true;
@@ -292,11 +329,28 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     
 	private void TcpIpConnectionType()
 	{
-		TcpipWriteThread TcpipThread = new TcpipWriteThread("thread1", log, "192.168.1.100", 8888, activity);
+		TcpipThread = new TcpipWriteThread("thread1", log, "192.168.1.100", 8888, activity);
 	}
+	
 	private void WifiDirectConnectionType()
 	{
+		manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(MainActivity.this, "Finding Peers",
+                        Toast.LENGTH_SHORT).show();
+                //manager.
+            }
+
+            @Override
+            public void onFailure(int reasonCode) {
+                Toast.makeText(MainActivity.this, "Couldnt find peers ",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
 		
+		manager.requestPeers(channel, peerListListener);
+		//peerListListener.
 	}
 
 	@Override
@@ -351,6 +405,23 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		}
 		super.onStop();
 	}
+
+	@Override
+	public void onPeersAvailable(WifiP2pDeviceList peerList) {
+		for (WifiP2pDevice device : peerList.getDeviceList()) {
+            this.device = device;
+            Toast.makeText(MainActivity.this, "Device found",
+                    Toast.LENGTH_SHORT).show();
+            break;
+        }
+	}
+
+	@Override
+	public void onConnectionInfoAvailable(WifiP2pInfo info) {
+		String infoname = info.groupOwnerAddress.toString();
+        Toast.makeText(MainActivity.this, infoname,
+                Toast.LENGTH_SHORT).show();
+	}
 }
 
 
@@ -363,8 +434,12 @@ class TcpipWriteThread implements Runnable {
 	private String IP;
 	private int port;
 	private Socket kkSocket;
-	private boolean resetLog = false;
-	private SocketsInterface si;
+	private SocketsInterface si;//tym interfejsem przesy³amy dane do MainActivity
+	private boolean GO = true;
+	public Object ToLock = new Object();//synchronizacja w¹tków
+	private String data_to_send = "";
+	
+	
 	
 	public TcpipWriteThread(String threadName, String logg, String IPP, int portt, Activity a)
 	{
@@ -400,10 +475,25 @@ class TcpipWriteThread implements Runnable {
 					}
 				}
 			}
+			si.resetLog("reset");
+			while(GO)
+			{
+				//send data
+				synchronized(ToLock)
+				{
+					if( !("").equals(data_to_send) )
+					{
+						out.println(data_to_send);
+						out.flush();
+						data_to_send = "";
+					}
+				}
+				Thread.sleep(300);//¿eby metoda TrySendData mia³a siê jak wstrzeliæ
+			}
+			
 			
 			out.close();
-			si.setSocket(kkSocket);
-			si.resetLog("reset");
+			kkSocket.close();
 		}
 		catch(Exception ex)
 		{
@@ -412,13 +502,24 @@ class TcpipWriteThread implements Runnable {
 		
 	}
 	
-	public Socket getSocket()
+	public void Stop()
 	{
-		return kkSocket;
+		GO = false;
 	}
-	public boolean ResetLog()
+	
+	public void TrySendData(String data)
 	{
-		return resetLog;
+		synchronized(ToLock)
+		{
+			if( ("").equals(data_to_send) )
+			{
+				data_to_send = data;
+			}
+			else
+			{
+				data_to_send += "\n" + data;
+			}
+		}
 	}
 	
 	
