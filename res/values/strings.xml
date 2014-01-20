@@ -9,6 +9,7 @@
     <string name="ip">192.168.1.100</string>
     <string name="ip_button">Try connect</string>
     <string name="last_opened_files_string">Last opened files:</string>
+    <string name="list_of_devices">List of avaiable devices:</string>
 	
     <string-array name="menu_items">
         <item>Program</item>

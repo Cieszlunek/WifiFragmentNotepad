@@ -343,7 +343,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         });
 		
 		manager.requestPeers(channel, peerListListener);
-		//peerListListener.
+		
 	}
 
 	@Override
@@ -402,7 +402,8 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	@Override
 	public void onPeersAvailable(WifiP2pDeviceList peerList) {
 		for (WifiP2pDevice device : peerList.getDeviceList()) {
-            this.device = device;
+            //this.device = device;
+			peers.add(device);
             Toast.makeText(MainActivity.this, "Device found",
                     Toast.LENGTH_SHORT).show();
             break;

@@ -27,7 +27,8 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int action_settings=0x7f090009;
+        public static final int action_settings=0x7f09000a;
+        public static final int device_list=0x7f090009;
         public static final int editorText=0x7f090005;
         public static final int fragment_layout_1=0x7f090001;
         public static final int ip=0x7f090003;
@@ -45,6 +46,7 @@ public final class R {
         public static final int list_item=0x7f030003;
         public static final int program_fragment=0x7f030004;
         public static final int settings_fragment=0x7f030005;
+        public static final int wifi_direct_fragment=0x7f030006;
     }
     public static final class menu {
         public static final int main=0x7f080000;
@@ -57,6 +59,7 @@ public final class R {
         public static final int ip_button=0x7f050006;
         public static final int ip_tw=0x7f050000;
         public static final int last_opened_files_string=0x7f050007;
+        public static final int list_of_devices=0x7f050008;
         public static final int menu=0x7f050004;
     }
     public static final class style {
