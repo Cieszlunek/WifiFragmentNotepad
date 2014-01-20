@@ -14,12 +14,14 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
 	private WifiP2pManager manager;
 	private Channel channel;
 	private MainActivity activity;
+	private DeviceListFragment deviceListFragment;
 	
-	public WifiDirectBroadcastReceiver(WifiP2pManager manager, Channel channel, MainActivity activity) {
+	public WifiDirectBroadcastReceiver(WifiP2pManager manager, Channel channel, MainActivity activity, DeviceListFragment deviceListFragment) {
 		super();
 		this.manager = manager;
 		this.channel = channel;
 		this.activity = activity;
+		this.deviceListFragment = deviceListFragment;
 	}
 	
 	@Override
@@ -39,7 +41,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
 		{
 			// request peers from the wifi p2p manager
 			if (manager != null) {
-				manager.requestPeers(channel, (PeerListListener) activity);
+				manager.requestPeers(channel, (PeerListListener) deviceListFragment);
 			}
 		} else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
 			if (manager == null) {

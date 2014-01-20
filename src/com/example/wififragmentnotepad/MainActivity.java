@@ -38,7 +38,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements onEditEventListener, ConnectionInterface, SocketsInterface, PeerListListener, ConnectionInfoListener {
+public class MainActivity extends Activity implements onEditEventListener, ConnectionInterface, SocketsInterface, ConnectionInfoListener {
 
 	//variables
 	private Spinner spinner1;
@@ -65,7 +65,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	private BroadcastReceiver receiver = null;
 	private final IntentFilter intentFilter = new IntentFilter();
 	private PeerListListener peerListListener;
-	private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+	//private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
 
 
     @Override
@@ -83,9 +83,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        receiver = new WifiDirectBroadcastReceiver(manager, channel,
-                this);
-        registerReceiver(receiver, intentFilter);
+        
         
     }
 
@@ -348,6 +346,9 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	DeviceListFragment fragment = new DeviceListFragment();
+    	receiver = new WifiDirectBroadcastReceiver(manager, channel,
+                this, fragment);
+        registerReceiver(receiver, intentFilter);
     	fragmentTransaction.replace(R.id.fragment_layout_1, fragment);
     	fragmentTransaction.commit();
 	}
@@ -404,7 +405,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		}
 		super.onStop();
 	}
-
+/*
 	@Override
 	public void onPeersAvailable(WifiP2pDeviceList peerList) {
 		for (WifiP2pDevice device : peerList.getDeviceList()) {
@@ -415,7 +416,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
             break;
         }
 	}
-
+*/
 	@Override
 	public void onConnectionInfoAvailable(WifiP2pInfo info) {
 		String infoname = info.groupOwnerAddress.toString();
