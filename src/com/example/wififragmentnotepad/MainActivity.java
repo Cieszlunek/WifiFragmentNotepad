@@ -437,8 +437,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		IP = infoname;
         //Toast.makeText(MainActivity.this, infoname,
         //        Toast.LENGTH_SHORT).show();
-        wifiDirectReadThread = new WifiDirectReadThread(activity);
-    	WifiDirectWriteThread wifiDirectWriteThread = new WifiDirectWriteThread(activity, IP, 8988);
+    	WifiDirectThread wifiDirectWriteThread = new WifiDirectThread(activity, IP, 8988, info.isGroupOwner);
     	try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -749,4 +748,103 @@ class WifiDirectWriteThread implements Runnable {
 	
 }
 
+
+
+
+
+
+
+
+
+//group owner pisze pierwszy
+class WifiDirectThread implements Runnable {
+
+	Thread runner;
+	private Socket socket;
+	private Activity activity;
+	private int port = 8988;
+	private String IP;
+	private boolean GO = true;
+	private Uri uri;
+	private boolean isGroupOwner;
+	//private Intent intent;
+	
+	public WifiDirectThread(Activity activity, String ip, int port, boolean isGroupOwner)
+	{
+		this.activity = activity;
+		this.port = port;
+		this.IP = ip;
+		this.isGroupOwner = isGroupOwner;
+		runner = new Thread(this, "WifiDirectWriteThread");
+		runner.run();
+	}
+	
+	@Override
+	public void run() {
+		if(!isGroupOwner)
+		{
+			try {
+				socket = new Socket();
+				socket.connect(new InetSocketAddress(IP, port));
+				PrintWriter writer = new PrintWriter(socket.getOutputStream());
+				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				while(GO)
+				{
+					String str = reader.readLine();
+					Toast.makeText(activity, str, Toast.LENGTH_SHORT).show();
+					Thread.sleep(300);
+					writer.println("dupa");
+					Thread.sleep(5000);
+					GO = false;
+				}
+				reader.close();
+				writer.close();
+				socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			try {
+				ServerSocket ss;
+				ss = new ServerSocket(port);
+				socket = ss.accept();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				PrintWriter writer = new PrintWriter(socket.getOutputStream());
+				while(GO)
+				{
+					writer.println("dupa");
+					Thread.sleep(300);
+					String str = reader.readLine();
+					Toast.makeText(activity, str, Toast.LENGTH_SHORT).show();
+					Thread.sleep(5000);
+					GO = false;
+				}
+				reader.close();
+				writer.close();
+				socket.close();
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void Stop()
+	{
+		GO = false;
+	}
+
+
+	
+}
 
