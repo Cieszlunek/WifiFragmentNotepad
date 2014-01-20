@@ -1,8 +1,12 @@
 package com.example.wififragmentnotepad;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +14,7 @@ import java.util.List;
 import com.example.wififragmentnotepad.DeviceListFragment.DeviceActionListener;
 import com.example.wififragmentnotepad.ProgramFragment.onEditEventListener;
 
+import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -27,9 +32,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.IntentService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.DialogInterface.OnClickListener;
 import android.text.InputType;
@@ -63,6 +70,9 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	public static final String stringHelp = "String help";
 	
 	private TcpipWriteThread TcpipThread;
+	private WifiDirectReadThread wifiDirectReadThread = null;
+	
+	private String IP;
 
 	private WifiP2pDevice device;
 	private WifiP2pManager manager;
@@ -424,6 +434,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	@Override
 	public void onConnectionInfoAvailable(WifiP2pInfo info) {
 		String infoname = info.groupOwnerAddress.toString();
+		IP = infoname;
         Toast.makeText(MainActivity.this, infoname,
                 Toast.LENGTH_SHORT).show();
 	}
@@ -469,12 +480,21 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 
     @Override
     public void connect(WifiP2pConfig config) {
+    	//TODO aasd
         manager.connect(channel, config, new ActionListener() {
-
+        	
             @Override
             public void onSuccess() {
                 // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
             	Toast.makeText(activity, "Connected!", Toast.LENGTH_SHORT).show();
+            	wifiDirectReadThread = new WifiDirectReadThread(activity);
+            	WifiDirectWriteThread wifiDirectWriteThread = new WifiDirectWriteThread(activity, IP, 8988);
+            	try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             }
 
             @Override
@@ -620,4 +640,112 @@ class TcpipWriteThread implements Runnable {
 	
 	
 }
+
+class WifiDirectReadThread implements Runnable {
+
+	Thread runner;
+	private Socket socket;
+	private Activity activity;
+	private int port = 8988;
+	private String IP;
+	private boolean GO = true;
+	
+	public WifiDirectReadThread(Activity activity)
+	{
+		this.activity = activity;
+		runner = new Thread(this, "WifiDirectReadThread");
+		runner.run();
+	}
+	
+	@Override
+	public void run() {
+		try {
+			ServerSocket ss = new ServerSocket(port);
+			socket = ss.accept();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			while(GO)
+			{
+				String str = reader.readLine();
+				if( !("").equals(str) && str != null )
+				{
+					Toast.makeText(activity, str, Toast.LENGTH_SHORT).show();
+					Thread.sleep(5000);
+					GO = false;
+				}
+			}
+			reader.close();
+			socket.close();
+			ss.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+	}
+	
+	public void Stop()
+	{
+		GO = false;
+	}
+	
+}
+
+
+
+
+class WifiDirectWriteThread implements Runnable {
+
+	Thread runner;
+	private Socket socket;
+	private Activity activity;
+	private int port = 8988;
+	private String IP;
+	private boolean GO = true;
+	private Uri uri;
+	//private Intent intent;
+	
+	public WifiDirectWriteThread(Activity activity, String ip, int port)
+	{
+		this.activity = activity;
+		this.port = port;
+		this.IP = ip;
+		runner = new Thread(this, "WifiDirectWriteThread");
+		runner.run();
+	}
+	
+	@Override
+	public void run() {
+		try {
+			socket = new Socket();
+			socket.connect(new InetSocketAddress(IP, port));
+			PrintWriter writer = new PrintWriter(socket.getOutputStream());
+			
+			while(GO)
+			{
+				writer.println("dupa");
+				Thread.sleep(5000);
+				GO = false;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void Stop()
+	{
+		GO = false;
+	}
+
+
+	
+}
+
 
