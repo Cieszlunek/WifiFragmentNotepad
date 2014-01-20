@@ -59,7 +59,11 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int position,
 					long arg3) {
-		        ((DeviceActionListener)getActivity()).disconnect();
+				WifiP2pDevice device = (WifiP2pDevice)  adapter.getItem(position);
+				WifiP2pConfig config = new WifiP2pConfig();
+				config.deviceAddress = device.deviceAddress;
+				config.wps.setup = WpsInfo.PBC;
+		        ((DeviceActionListener)getActivity()).connect(config);
 				
 			}
 		
@@ -69,7 +73,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 					int arg2, long arg3) {
-				
+				((DeviceActionListener)getActivity()).disconnect();
 				return false;
 			}
 			

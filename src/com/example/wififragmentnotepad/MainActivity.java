@@ -349,10 +349,10 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	DeviceListFragment fragment = new DeviceListFragment();
-    	receiver = new WifiDirectBroadcastReceiver(manager, channel, this, fragment);
-        registerReceiver(receiver, intentFilter);
     	fragmentTransaction.replace(R.id.fragment_layout_1, fragment);
     	fragmentTransaction.commit();
+    	receiver = new WifiDirectBroadcastReceiver(manager, channel, this, fragment);
+        registerReceiver(receiver, intentFilter);
 	}
 
 	@Override
