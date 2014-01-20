@@ -1,4 +1,4 @@
-package com.example.trzeci;
+package com.example.wififragmentnotepad;
 
 import android.app.Activity;
 import android.app.ListFragment;
@@ -34,13 +34,14 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         //lw = (ListView) findViewById(R.id.paired_devices);
-        this.setListAdapter(new WiFiPeerListAdapter(getActivity(), R.layout.row_devices, peers));
 
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mContentView = inflater.inflate(R.layout.device_list, null);
+        mContentView = inflater.inflate(R.layout.wifi_direct_fragment, container, false);    //(R.layout.wifi_direct_fragment, null);
+
+        this.setListAdapter(new WiFiPeerListAdapter(getActivity(), R.layout.device_list_item, peers));
         return mContentView;
     }
 
@@ -93,7 +94,7 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) getActivity().getSystemService(
                         Context.LAYOUT_INFLATER_SERVICE);
-                v = vi.inflate(R.layout.row_devices, null);
+                v = vi.inflate(R.layout.device_list_item, null);
             }
             WifiP2pDevice device = items.get(position);
             if (device != null) {
@@ -112,9 +113,9 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
 
     public void updateThisDevice(WifiP2pDevice device) {
         this.device = device;
-        TextView view = (TextView) mContentView.findViewById(R.id.list_of_opened_files);
+        TextView view = (TextView) mContentView.findViewById(R.id.list_of_devices);
         view.setText(device.deviceName);
-        view = (TextView) mContentView.findViewById(R.id.list_of_opened_files);
+        view = (TextView) mContentView.findViewById(R.id.status_of_device);
         view.setText(getDeviceStatus(device.status));
     }
 
@@ -129,7 +130,7 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         peers.addAll(peerList.getDeviceList());
         ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
         if (peers.size() == 0) {
-            Log.d(ClientActivity.TAG, "No devices found");
+            Log.d(MainActivity.stringHelp, "No devices found");
             return;
         }
 

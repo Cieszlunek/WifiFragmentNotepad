@@ -55,6 +55,8 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	private String log = "";
 	private DatabaseHelper databaseHelper;
 
+	public static final String stringHelp = "String help";
+	
 	private TcpipWriteThread TcpipThread;
 
 	private WifiP2pDevice device;
@@ -343,7 +345,11 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         });
 		
 		manager.requestPeers(channel, peerListListener);
-		
+		FragmentManager fragmentManager = getFragmentManager();
+    	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+    	DeviceListFragment fragment = new DeviceListFragment();
+    	fragmentTransaction.replace(R.id.fragment_layout_1, fragment);
+    	fragmentTransaction.commit();
 	}
 
 	@Override
