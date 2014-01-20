@@ -201,6 +201,8 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
         void connect(WifiP2pConfig config);
 
         void disconnect();
+        
+        void refreshFragment();
     }
 
 }

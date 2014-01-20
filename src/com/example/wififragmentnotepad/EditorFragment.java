@@ -10,8 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.Socket;
-import java.net.UnknownHostException;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -33,7 +31,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	
 	//private Socket socket = null;
 	//private boolean socket_is_not_null = false;
-	private TcpipWriteThread sendThread = null;
+	private ThreadInterface threadInterface = null;
 	//private SendThread sendThread;
 
 	
@@ -76,9 +74,9 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             		{
             			int pos = editText.getSelectionStart();
             			editText.append("\n");
-            			if(sendThread != null)
+            			if(threadInterface != null)
             			{
-            				sendThread.TrySendData("Enter," + pos);
+            				threadInterface.TrySendData("Enter," + pos);
             			}
             			else
             			{
@@ -106,9 +104,9 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	public void onPause() {
 		//super onPause();
 		saveStringToFile(fileName, editText.getText().toString());
-		if(sendThread != null)
+		if(threadInterface != null)
 		{
-			sendThread.Stop();
+			threadInterface.Stop();
 		}
 		super.onPause();
 	}
@@ -116,9 +114,9 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	@Override
 	public void onResume()
 	{
-		if(sendThread != null)
+		if(threadInterface != null)
 		{
-			sendThread.run();
+			threadInterface.Restart();
 		}
 		super.onResume();
 	}
@@ -140,20 +138,18 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		@Override //arg1 - start position of cursor, arg2 - number of changed characters, arg3 - length of new inserted text
 		public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
 				int arg3) {
-			//previous_text_length = arg3;
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void onTextChanged(CharSequence arg0, int arg1, int arg2,
 				int arg3) {
-			if(sendThread != null)
+			if(threadInterface != null)
 			{
 				int temp = arg1 + arg3;
 				if(temp > previous_text_length)
 				{
 					Log.i("key pressed", arg0.subSequence(temp - 1, temp).toString());
-					sendThread.TrySendData(arg0.subSequence(temp - 1, temp).toString() +"," + arg1);
+					threadInterface.TrySendData(arg0.subSequence(temp - 1, temp).toString() +"," + arg1);
 				}
 				else if(temp == previous_text_length)
 				{
@@ -165,7 +161,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 					{
 					Log.i("Key pressed", "backspace");
 					}
-					sendThread.TrySendData("backspace," + arg1);
+					threadInterface.TrySendData("backspace," + arg1);
 				}
 				previous_text_length = temp;
 			}
@@ -239,8 +235,8 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 
 
 	@Override
-	public void SetConnection(TcpipWriteThread th) {
-		sendThread = th;
+	public void SetConnection(ThreadInterface ti) {
+		threadInterface = ti;
 	}
 
 
@@ -248,98 +244,3 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 
 }
 
-
-
-/*
-//thread class to communicate over sockets
-class SendThread implements Runnable {
-
-	Thread runner;
-	public boolean RUN = true;
-	public String DataToSend = "";
-	private Object ToLock = new Object();
-	public Socket kkSocket;
-	
-	public SendThread(Socket s) {
-		//kkSocket = s;
-	}
-	public SendThread(String threadName, Socket s) {
-		kkSocket = s;
-		runner = new Thread(this, threadName); // (1) Create a new thread.
-		//System.out.println(runner.getName());
-		Log.e("New thread started ", runner.getName());
-		runner.start(); // (2) Start the thread.
-	}
-	public void run() {
-		//Display info about this particular thread
-		//System.out.println(Thread.currentThread());
-		try {
-			//kkSocket = new Socket("192.168.1.100", 8888);
-			PrintWriter out = new PrintWriter(kkSocket.getOutputStream(), true);
-			while(RUN)
-			{
-				synchronized(ToLock)
-				{
-					if(!DataToSend.equals(""))
-					{
-						out.println(DataToSend);
-						out.flush();
-						DataToSend = "";
-					}
-						
-				}
-				Thread.sleep(300); //abyœmy mogli siê wgryŸæ w pêtlê dodaj¹c dane
-			}
-			out.println("#exit");
-			out.close();
-			kkSocket.close();
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-					
-		}
-	}
-	public void Stop()
-	{
-		RUN = false;
-	}
-	
-	
-	//-----------------------Do funkcji podajesz stringa do wys³ania - je¿eli zwróci true -> dane zosta³y dopisane do wys³ania, false -> nie mo¿na dopisaæ, 
-	// trzeba wys³aæ ca³y plik przy nastêpnym po³¹czeniu
-	//
-	public boolean TrySendData(String str)
-	{
-		int len;
-		synchronized(ToLock)
-		{
-			len = DataToSend.length();
-		}
-		if(len > 1000)
-		{
-			return false;
-		}
-		
-		synchronized(ToLock)
-		{
-			if(DataToSend.equals(""))
-			{
-				DataToSend = str;
-			}
-			else
-			{
-				DataToSend += "\n" + str;
-			}
-		}
-		
-		return true;
-	}
-	
-}
-*/

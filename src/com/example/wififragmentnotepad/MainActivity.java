@@ -30,6 +30,7 @@ import android.os.Environment;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.IntentService;
@@ -61,18 +62,18 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	public String fileName;    
 	private EditorFragment editorFragment;
 	private boolean editing = false;
-	private boolean connected = false;
 	private Socket socket = null;
 	private String log = "";
 	private DatabaseHelper databaseHelper;
 	private boolean retryChannel = false;
+	private DeviceListFragment deviceListFragment;
 
 	public static final String stringHelp = "String help";
 	
-	private TcpipWriteThread TcpipThread;
-	private WifiDirectReadThread wifiDirectReadThread = null;
+	private ThreadInterface threadInterface = null;
 	
 	private String IP;
+	private int port = 8988;
 
 	private WifiP2pDevice device;
 	private WifiP2pManager manager;
@@ -89,6 +90,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         setContentView(R.layout.activity_main);
         activity = this;
         databaseHelper = new DatabaseHelper(this);
+        
         LoadLog();
         CreateSpinner1();
         
@@ -110,12 +112,22 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     @Override
     public void onPause()
     {
+    	if(receiver != null)
+    	{
+    		unregisterReceiver(receiver);
+    	}
+    	databaseHelper.onPause();
     	super.onPause();
     }
     
     @Override
     public void onResume()
     {
+    	if(receiver != null)
+    	{
+    		registerReceiver(receiver, intentFilter);
+    	}
+    	databaseHelper.onResrume();
     	super.onResume();
     }
 
@@ -137,7 +149,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 			@Override
 			public void onItemSelected(AdapterView<?> arg0, View arg1,
 					int arg2, long arg3) {
-				previous = selected;
+				//previous = selected;
 				selected = arg2;
 				//if(selected != previous)
 				UpdateFragment(arg2);
@@ -146,7 +158,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 			@Override
 			public void onNothingSelected(AdapterView<?> arg0) {
 				// TODO Auto-generated method stub
-				
+				//UpdateFragment(selected);
 			}
         	
         });
@@ -185,20 +197,21 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	{
     		editorFragment = new EditorFragment();
     		editorFragment.GoToEditorFragment(fileName);
-    		editorFragment.SetConnection(TcpipThread);
+    		editorFragment.SetConnection(threadInterface);
         	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
         	fragmentTransaction.commit();
+        	
     	}
     	else if(selected == previous)
     	{
-    		ProgramFragment fragment = new ProgramFragment();
-    		fragmentTransaction.add(R.id.fragment_layout_1, fragment);
+    		ProgramFragment fragment1 = new ProgramFragment();
+    		fragmentTransaction.add(R.id.fragment_layout_1, fragment1);
     		fragmentTransaction.commit();
     	}
     	else
     	{
-    		ProgramFragment fragment = new ProgramFragment();
-    		fragmentTransaction.replace(R.id.fragment_layout_1, fragment);
+    		ProgramFragment fragment2 = new ProgramFragment();
+    		fragmentTransaction.replace(R.id.fragment_layout_1, fragment2);
         	fragmentTransaction.commit();
     	}
     }
@@ -224,6 +237,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     
     private void OnCreateFile()
     {
+    	//TODO here
     	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 		builder.setTitle("Enter file name");
 		final EditText input = new EditText(activity);
@@ -301,7 +315,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	SettingsFragment fragment = new SettingsFragment();
     	fragmentTransaction.replace(R.id.fragment_layout_1, fragment);
-    	fragmentTransaction.commit();
+    	fragmentTransaction.commitAllowingStateLoss();
     }
     
     public void EditFile()
@@ -310,7 +324,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	EditorFragment editorFragment = new EditorFragment();
 		editorFragment.GoToEditorFragment(fileName);
-		editorFragment.SetConnection(TcpipThread);
+		editorFragment.SetConnection(threadInterface);
     	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
     	fragmentTransaction.commit();
     	editing = true;
@@ -331,13 +345,51 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		}
 		else
 		{
+			FragmentManager fragmentManager = getFragmentManager();
+	    	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+	    	deviceListFragment = new DeviceListFragment();
+	    	fragmentTransaction.replace(R.id.fragment_layout_1, deviceListFragment);
+	    	fragmentTransaction.commit();
 			WifiDirectConnectionType();
 		}
 	}
     
 	private void TcpIpConnectionType()
 	{
-		TcpipThread = new TcpipWriteThread("thread1", log, "192.168.1.100", 8888, activity);
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+		builder.setTitle("Choose mode");
+		final StringAdapter adapter = new StringAdapter();
+		adapter.setMasterOrSlaveList();
+		builder.setAdapter(adapter, new OnClickListener(){
+			@Override
+			public void onClick(DialogInterface arg0, int arg1) {
+				SetMasterOrSlaveTcpipConnection(String.valueOf(adapter.getItem(arg1)));
+			}
+		});
+		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+			@Override
+			public void onClick(DialogInterface dialog, int which){
+				dialog.cancel();
+			}
+		});
+		Dialog dialog = builder.create();
+		dialog.show();
+		
+	}
+	
+	private void SetMasterOrSlaveTcpipConnection(String str)
+	{
+		WifiDirectThread th = new WifiDirectThread();
+		threadInterface = (ThreadInterface) th;
+		if( ("Master").equals(str) )
+		{
+			th.Initialize("192.168.1.100", port, true);
+		}
+		else
+		{
+			th.Initialize("192.168.1.100", port, false);
+		}
 	}
 	
 	private void WifiDirectConnectionType()
@@ -358,21 +410,15 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         });
 		
 		manager.requestPeers(channel, peerListListener);
-		FragmentManager fragmentManager = getFragmentManager();
-    	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-    	DeviceListFragment fragment = new DeviceListFragment();
-    	fragmentTransaction.replace(R.id.fragment_layout_1, fragment);
-    	fragmentTransaction.commit();
-    	receiver = new WifiDirectBroadcastReceiver(manager, channel, this, fragment);
+		
+    	receiver = new WifiDirectBroadcastReceiver(manager, channel, this, deviceListFragment);
         registerReceiver(receiver, intentFilter);
+        
 	}
 
 	@Override
 	public void resetLog(String command) {
-		if(command == "reset")
-		{
 			log = "";
-		}
 	}
 
 	@Override
@@ -417,6 +463,11 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 				e.printStackTrace();
 			}
 		}
+		databaseHelper.onPause();
+		if(receiver != null)
+		{
+			unregisterReceiver(receiver);
+		}
 		super.onStop();
 	}
 /*
@@ -434,10 +485,12 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	@Override
 	public void onConnectionInfoAvailable(WifiP2pInfo info) {
 		String infoname = info.groupOwnerAddress.toString();
-		IP = infoname;
-        //Toast.makeText(MainActivity.this, infoname,
+		IP = infoname.substring(1);
+        //Toast.makeText(MainActivity.this, IP,
         //        Toast.LENGTH_SHORT).show();
-    	WifiDirectThread wifiDirectWriteThread = new WifiDirectThread(activity, IP, 8988, info.isGroupOwner);
+    	WifiDirectThread wifiDirectThread = new WifiDirectThread();
+    	threadInterface = (ThreadInterface) wifiDirectThread;
+    	threadInterface.Initialize(IP, port, info.isGroupOwner);
     	try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -538,6 +591,14 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
                     Toast.LENGTH_LONG).show();
         }
     }
+
+	@Override
+	public void refreshFragment() {
+		FragmentManager fragmentManager = getFragmentManager();
+    	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+    	fragmentTransaction.replace(R.id.fragment_layout_1, deviceListFragment);
+    	fragmentTransaction.commit();
+	}
 }
 
 
@@ -641,114 +702,6 @@ class TcpipWriteThread implements Runnable {
 	
 }
 
-class WifiDirectReadThread implements Runnable {
-
-	Thread runner;
-	private Socket socket;
-	private Activity activity;
-	private int port = 8988;
-	private String IP;
-	private boolean GO = true;
-	
-	public WifiDirectReadThread(Activity activity)
-	{
-		this.activity = activity;
-		runner = new Thread(this, "WifiDirectReadThread");
-		runner.run();
-	}
-	
-	@Override
-	public void run() {
-		try {
-			ServerSocket ss = new ServerSocket(port);
-			socket = ss.accept();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			while(GO)
-			{
-				String str = reader.readLine();
-				if( !("").equals(str) && str != null )
-				{
-					Toast.makeText(activity, str, Toast.LENGTH_SHORT).show();
-					Thread.sleep(5000);
-					GO = false;
-				}
-			}
-			reader.close();
-			socket.close();
-			ss.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		
-	}
-	
-	public void Stop()
-	{
-		GO = false;
-	}
-	
-}
-
-
-
-
-class WifiDirectWriteThread implements Runnable {
-
-	Thread runner;
-	private Socket socket;
-	private Activity activity;
-	private int port = 8988;
-	private String IP;
-	private boolean GO = true;
-	private Uri uri;
-	//private Intent intent;
-	
-	public WifiDirectWriteThread(Activity activity, String ip, int port)
-	{
-		this.activity = activity;
-		this.port = port;
-		this.IP = ip;
-		runner = new Thread(this, "WifiDirectWriteThread");
-		runner.run();
-	}
-	
-	@Override
-	public void run() {
-		try {
-			socket = new Socket();
-			socket.connect(new InetSocketAddress(IP, port));
-			PrintWriter writer = new PrintWriter(socket.getOutputStream());
-			
-			while(GO)
-			{
-				writer.println("dupa");
-				Thread.sleep(5000);
-				GO = false;
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-	
-	public void Stop()
-	{
-		GO = false;
-	}
-
-
-	
-}
-
-
 
 
 
@@ -757,26 +710,20 @@ class WifiDirectWriteThread implements Runnable {
 
 
 //group owner pisze pierwszy
-class WifiDirectThread implements Runnable {
+class WifiDirectThread implements Runnable, ThreadInterface {
 
 	Thread runner;
 	private Socket socket;
-	private Activity activity;
 	private int port = 8988;
 	private String IP;
 	private boolean GO = true;
-	private Uri uri;
 	private boolean isGroupOwner;
+	public Object ToLock = new Object();
+	private String DataToSend = "";
 	//private Intent intent;
 	
-	public WifiDirectThread(Activity activity, String ip, int port, boolean isGroupOwner)
+	public WifiDirectThread()
 	{
-		this.activity = activity;
-		this.port = port;
-		this.IP = ip;
-		this.isGroupOwner = isGroupOwner;
-		runner = new Thread(this, "WifiDirectWriteThread");
-		runner.run();
 	}
 	
 	@Override
@@ -785,17 +732,45 @@ class WifiDirectThread implements Runnable {
 		{
 			try {
 				socket = new Socket();
+				socket.bind(null);
+				//socket.
+				Thread.sleep(3000);
 				socket.connect(new InetSocketAddress(IP, port));
 				PrintWriter writer = new PrintWriter(socket.getOutputStream());
 				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				while(GO)
 				{
 					String str = reader.readLine();
-					Toast.makeText(activity, str, Toast.LENGTH_SHORT).show();
+					if( ("#exit").equals(str) )
+					{
+						GO = false;
+						
+					}
+					else if( ("#noAction").equals(str) )
+					{
+						
+					}
+					else
+					{
+						Log.e("tag", str);
+						//TODO implement writedata
+					}
 					Thread.sleep(300);
-					writer.println("dupa");
-					Thread.sleep(5000);
-					GO = false;
+					
+					synchronized(ToLock)
+					{
+						if(!("").equals(DataToSend))
+						{
+							writer.println(DataToSend);
+							DataToSend = "";
+						}
+						else
+						{
+							writer.println("#noAction");
+						}
+					}
+					writer.flush();
+					Thread.sleep(300);
 				}
 				reader.close();
 				writer.close();
@@ -818,12 +793,36 @@ class WifiDirectThread implements Runnable {
 				PrintWriter writer = new PrintWriter(socket.getOutputStream());
 				while(GO)
 				{
-					writer.println("dupa");
+					synchronized(ToLock)
+					{
+						if(!("").equals(DataToSend))
+						{
+							writer.println(DataToSend);
+							DataToSend = "";
+						}
+						else
+						{
+							writer.println("#noAction");
+						}
+					}
+					writer.flush();
 					Thread.sleep(300);
 					String str = reader.readLine();
-					Toast.makeText(activity, str, Toast.LENGTH_SHORT).show();
-					Thread.sleep(5000);
-					GO = false;
+					if( ("#exit").equals(str) )
+					{
+						GO = false;
+						
+					}
+					else if( ("#noAction").equals(str) )
+					{
+						
+					}
+					else
+					{
+						Log.e("tag", str);
+						//TODO implement writedata
+					}
+					Thread.sleep(300);
 				}
 				reader.close();
 				writer.close();
@@ -844,7 +843,52 @@ class WifiDirectThread implements Runnable {
 		GO = false;
 	}
 
+	@Override
+	public void Initialize(String ip, int port, boolean isGroupOwner) {
+		this.port = port;
+		this.IP = ip;
+		this.isGroupOwner = isGroupOwner;
+		runner = new Thread(this, "WifiDirectThread");
+		runner.start();
+	}
+
+	@Override
+	public void TrySendData(String data) {
+		synchronized(ToLock)
+		{
+			if(DataToSend.equals(""))
+			{
+				DataToSend = data;
+			}
+			else
+			{
+				DataToSend += "\n" + data;
+			}
+		}
+		
+	}
+
+	@Override
+	public void Restart() {
+		run();
+	}
+
 
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

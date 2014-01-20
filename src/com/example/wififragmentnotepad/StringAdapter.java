@@ -44,4 +44,10 @@ public class StringAdapter extends BaseAdapter{
 		return view;
 	}
 
+	public void setMasterOrSlaveList() {
+		lista.add("Master");
+		lista.add("Slave");
+		
+	}
+
 }

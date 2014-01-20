@@ -14,6 +14,8 @@ public class ProgramFragment extends Fragment {
 	private ListView lw;
 	private onEditEventListener l;
 	
+
+	
 	@Override
 	  public void onAttach(Activity activity) {
 	    super.onAttach(activity);

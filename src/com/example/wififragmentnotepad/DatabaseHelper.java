@@ -8,9 +8,11 @@ import android.database.sqlite.SQLiteDatabase;
 public class DatabaseHelper {
 	private DatabaseClass dbc;
 	private SQLiteDatabase database;
+	private Context context;
 	
 	public DatabaseHelper(Context context)
 	{
+		this.context = context;
 		dbc = new DatabaseClass(context);
 		database = dbc.getWritableDatabase();
 	}
@@ -78,5 +80,17 @@ public class DatabaseHelper {
 	
 	public Cursor getAllSharedFiles() {
 		return database.rawQuery("select * from shared_files", null);
+	}
+	
+	public void onPause()
+	{
+		database.close();
+		dbc.close();
+	}
+	
+	public void onResrume()
+	{
+		dbc = new DatabaseClass(context);
+		database = dbc.getWritableDatabase();
 	}
 }
