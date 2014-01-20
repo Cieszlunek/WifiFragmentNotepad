@@ -62,6 +62,7 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
 			}
 		
 		});
+		
 		return view;
     }
 
@@ -104,12 +105,13 @@ public class DeviceListFragment extends Fragment implements PeerListListener {
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View v = convertView;
+        public View getView(int position, View v, ViewGroup parent) {
+            //View v = convertView;
             if (v == null) {
-                LayoutInflater vi = (LayoutInflater) getActivity().getSystemService(
-                        Context.LAYOUT_INFLATER_SERVICE);
-                v = vi.inflate(R.layout.device_list_item, null);
+                //LayoutInflater vi = (LayoutInflater) getActivity().getSystemService(
+                //        Context.LAYOUT_INFLATER_SERVICE);
+            	LayoutInflater vi = LayoutInflater.from(parent.getContext());
+                v = vi.inflate(R.layout.device_list_item, parent, false);
             }
             WifiP2pDevice device = items.get(position);
             if (device != null) {
