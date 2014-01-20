@@ -126,7 +126,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 					int arg2, long arg3) {
 				previous = selected;
 				selected = arg2;
-				if(selected != previous)
+				//if(selected != previous)
 				UpdateFragment(arg2);
 			}
 
