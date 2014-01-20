@@ -55,8 +55,11 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	private String log = "";
 	private DatabaseHelper databaseHelper;
 <<<<<<< HEAD
+<<<<<<< HEAD
 	private TcpipWriteThread TcpipThread;
 =======
+=======
+>>>>>>> 1acea9f1f6e1b33e839b50f953270faccc8fde39
 	private WifiP2pDevice device;
 	private WifiP2pManager manager;
 	private Channel channel;
@@ -64,6 +67,9 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	private final IntentFilter intentFilter = new IntentFilter();
 	private PeerListListener peerListListener;
 	private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+<<<<<<< HEAD
+>>>>>>> 1acea9f1f6e1b33e839b50f953270faccc8fde39
+=======
 >>>>>>> 1acea9f1f6e1b33e839b50f953270faccc8fde39
 	
 	
