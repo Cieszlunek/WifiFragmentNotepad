@@ -435,8 +435,16 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	public void onConnectionInfoAvailable(WifiP2pInfo info) {
 		String infoname = info.groupOwnerAddress.toString();
 		IP = infoname;
-        Toast.makeText(MainActivity.this, infoname,
-                Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this, infoname,
+        //        Toast.LENGTH_SHORT).show();
+        wifiDirectReadThread = new WifiDirectReadThread(activity);
+    	WifiDirectWriteThread wifiDirectWriteThread = new WifiDirectWriteThread(activity, IP, 8988);
+    	try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -487,14 +495,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
             public void onSuccess() {
                 // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
             	Toast.makeText(activity, "Connected!", Toast.LENGTH_SHORT).show();
-            	wifiDirectReadThread = new WifiDirectReadThread(activity);
-            	WifiDirectWriteThread wifiDirectWriteThread = new WifiDirectWriteThread(activity, IP, 8988);
-            	try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+            	
             }
 
             @Override
