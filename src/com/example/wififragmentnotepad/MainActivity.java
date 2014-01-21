@@ -729,7 +729,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						Log.e("tag", str);
 						//TODO implement writedata
 					}
-					Thread.sleep(300);
+					Thread.sleep(100);
 					
 					synchronized(ToLock)
 					{
@@ -744,7 +744,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						}
 					}
 					writer.flush();
-					Thread.sleep(300);
+					Thread.sleep(100);
 				}
 				reader.close();
 				writer.close();
@@ -780,7 +780,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						}
 					}
 					writer.flush();
-					Thread.sleep(300);
+					Thread.sleep(100);
 					String str = reader.readLine();
 					if( ("#exit").equals(str) )
 					{
@@ -796,7 +796,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						Log.e("tag", str);
 						//TODO implement writedata
 					}
-					Thread.sleep(300);
+					Thread.sleep(100);
 				}
 				reader.close();
 				writer.close();
@@ -815,6 +815,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 	public void Stop()
 	{
 		GO = false;
+		DataToSend += "#exit";
 	}
 
 	@Override
@@ -830,7 +831,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 	public void TrySendData(String data) {
 		synchronized(ToLock)
 		{
-			if(DataToSend.equals(""))
+			if(("").equals(DataToSend))
 			{
 				DataToSend = data;
 			}

@@ -74,9 +74,21 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             		{
             			int pos = editText.getSelectionStart();
             			Editable old = editText.getText();
-            			CharSequence pre = old.subSequence(0, pos);
-            			CharSequence after = old.subSequence(pos, old.length() - pos);
-            			editText.setText(pre + "\n" + after); //   append("\n");
+            			int length = old.length();
+            			if(pos == length)
+            			{
+            				editText.append(System.getProperty("line.separator"));
+            			}
+            			else if(pos == 0)
+            			{
+            				editText.setText(System.getProperty("line.separator") + old);
+            			}
+            			else
+            			{
+	            			CharSequence pre = old.subSequence(0, pos);
+	            			CharSequence after = old.subSequence(pos, old.length());
+	            			editText.setText(pre + System.getProperty("line.separator") + after); //   append(System.getProperty("line.separator"));
+            			}
             			if(threadInterface != null)
             			{
             				threadInterface.TrySendData("Enter," + pos);
@@ -85,7 +97,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             			{
             				Log.i("Key pressed", "enter");
             			}
-            			pressed_enter = true;
+            			pressed_enter = true;//aby enter nie odpali³ siê dwa razy - niweluje b³¹d
             			return true;
             		}
             		else
@@ -110,9 +122,33 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		if(threadInterface != null)
 		{
 			threadInterface.Stop();
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		super.onPause();
 	}
+	
+	@Override
+	public void onStop()
+	{
+		saveStringToFile(fileName, editText.getText().toString());
+		if(threadInterface != null)
+		{
+			threadInterface.Stop();
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		super.onStop();
+	}
+	
 	
 	@Override
 	public void onResume()
@@ -192,18 +228,35 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 				StringBuilder stringBuilder = new StringBuilder();
 				while((receiveString = bufferedReader.readLine()) != null)
 				{
-					stringBuilder.append(receiveString);
+					if(receiveString.trim().isEmpty())
+					{
+						stringBuilder.append(System.getProperty("line.separator"));
+					}
+					else
+					{
+						stringBuilder.append(receiveString + System.getProperty("line.separator"));
+					}
 				}
 				inputStream.close();
 				ret = stringBuilder.toString();
-				String[] temp = ret.split("\n");
+				String[] temp = ret.split(System.getProperty("line.separator"));
 				int sum = 0;
 				for(int i = 0; i < temp.length; ++i)
 				{
 					if(threadInterface != null)
 					{
-						threadInterface.TrySendData( (temp[i] + "," + sum) );
-						sum += temp[i].length();
+						if(temp[i].isEmpty())
+						{
+							threadInterface.TrySendData( "Enter" + "," + sum );
+							sum += 1;
+						}
+						else
+						{
+							threadInterface.TrySendData( temp[i] + "," + sum );
+							sum += temp[i].length()- 1 ;
+							threadInterface.TrySendData( "Enter" + "," + sum );
+							sum += 1;
+						}
 					}
 				}
 			}
@@ -257,7 +310,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		threadInterface = ti;
 	}
 
-
+	//TODO implement receive data
 
 
 }
