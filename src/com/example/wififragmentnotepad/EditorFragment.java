@@ -31,7 +31,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	
 	//private Socket socket = null;
 	//private boolean socket_is_not_null = false;
-	private ThreadInterface threadInterface = null;
+	private static ThreadInterface threadInterface = null;
 	//private SendThread sendThread;
 
 	
@@ -73,7 +73,10 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             		if(!pressed_enter)
             		{
             			int pos = editText.getSelectionStart();
-            			editText.append("\n");
+            			Editable old = editText.getText();
+            			CharSequence pre = old.subSequence(0, pos);
+            			CharSequence after = old.subSequence(pos, old.length() - pos);
+            			editText.setText(pre + "\n" + after); //   append("\n");
             			if(threadInterface != null)
             			{
             				threadInterface.TrySendData("Enter," + pos);
@@ -114,10 +117,10 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	@Override
 	public void onResume()
 	{
-		if(threadInterface != null)
-		{
-			threadInterface.Restart();
-		}
+		//if(threadInterface != null)
+		//{
+		//	threadInterface.Restart();
+		//}
 		super.onResume();
 	}
 	
@@ -146,6 +149,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 			if(threadInterface != null)
 			{
 				int temp = arg1 + arg3;
+				//int length = 
 				if(temp > previous_text_length)
 				{
 					Log.i("key pressed", arg0.subSequence(temp - 1, temp).toString());
@@ -164,6 +168,10 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 					threadInterface.TrySendData("backspace," + arg1);
 				}
 				previous_text_length = temp;
+			}
+			else
+			{
+				Log.e("thread interface", " is null");
 			}
 		}
 		
@@ -188,6 +196,16 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 				}
 				inputStream.close();
 				ret = stringBuilder.toString();
+				String[] temp = ret.split("\n");
+				int sum = 0;
+				for(int i = 0; i < temp.length; ++i)
+				{
+					if(threadInterface != null)
+					{
+						threadInterface.TrySendData( (temp[i] + "," + sum) );
+						sum += temp[i].length();
+					}
+				}
 			}
 		}
 		catch(FileNotFoundException e)

@@ -87,6 +87,10 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 
         LoadLog();
         CreateSpinner1();
+        FragmentManager fragmentManager = getFragmentManager();
+    	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+    	fragmentTransaction.add(R.id.fragment_layout_1, new ProgramFragment());
+    	fragmentTransaction.commit();
         
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
@@ -131,14 +135,6 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     private void CreateSpinner1()
     {
     	spinner1 = (Spinner) findViewById(R.id.spinner1);
-    	FragmentManager fragmentManager = getFragmentManager();
-    	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-    	programFragment = new ProgramFragment();
-		fragmentTransaction.add(R.id.fragment_layout_1, programFragment, tag);
-		settingsFragment = new SettingsFragment();
-		fragmentTransaction.add(R.id.fragment_layout_1, settingsFragment, tag);
-		fragmentTransaction.commit();
-        
         spinner1.setOnItemSelectedListener(new OnItemSelectedListener()
         {
 
@@ -188,23 +184,8 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     {
     	FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-    	
-    	if(editing)
-    	{
-    		editorFragment = new EditorFragment();
-    		editorFragment.GoToEditorFragment(fileName);
-    		editorFragment.SetConnection(threadInterface);
-        	fragmentTransaction.add(R.id.fragment_layout_1, editorFragment);
-        	fragmentTransaction.commit();
-        	
-    	}
-    	
-    	else
-    	{
-    		fragmentTransaction.detach(settingsFragment);
-    		fragmentTransaction.attach(programFragment);
-        	fragmentTransaction.commit();
-    	}
+    	fragmentTransaction.replace(R.id.fragment_layout_1, new ProgramFragment());
+    	fragmentTransaction.commit();
     }
     
     private void OnOpenFile()
@@ -306,10 +287,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     {
     	FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-    	//SettingsFragment fragment = new SettingsFragment();
-    	//fragmentTransaction.replace(R.id.fragment_layout_1, fragment, tag);  //.replace(R.id.fragment_layout_1, fragment);
-    	fragmentTransaction.detach(programFragment);
-    	fragmentTransaction.attach(settingsFragment);
+    	fragmentTransaction.replace(R.id.fragment_layout_1, new SettingsFragment());
     	fragmentTransaction.commit();
     }
     
@@ -731,6 +709,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 				//socket.
 				Thread.sleep(3000);
 				socket.connect(new InetSocketAddress(IP, port));
+				Log.e("connected", "as slave");
 				PrintWriter writer = new PrintWriter(socket.getOutputStream());
 				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				while(GO)
@@ -743,7 +722,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 					}
 					else if( ("#noAction").equals(str) )
 					{
-						
+						//Log.e("tag", str);
 					}
 					else
 					{
