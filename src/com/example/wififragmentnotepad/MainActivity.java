@@ -8,16 +8,12 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.example.wififragmentnotepad.DeviceListFragment.DeviceActionListener;
 import com.example.wififragmentnotepad.ProgramFragment.onEditEventListener;
 
-import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
@@ -30,14 +26,11 @@ import android.os.Environment;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.app.IntentService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.DialogInterface.OnClickListener;
 import android.text.InputType;
@@ -60,13 +53,15 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     private NewFileDialog newFileDialog;
     private Activity activity;
 	public String fileName;    
-	private EditorFragment editorFragment;
+	private EditorFragment editorFragment = null;
+	private ProgramFragment programFragment = null;
+	private SettingsFragment settingsFragment;
 	private boolean editing = false;
 	private Socket socket = null;
 	private String log = "";
-	private DatabaseHelper databaseHelper;
 	private boolean retryChannel = false;
 	private DeviceListFragment deviceListFragment;
+	private String tag = "fragment";
 
 	public static final String stringHelp = "String help";
 	
@@ -89,8 +84,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         activity = this;
-        databaseHelper = new DatabaseHelper(this);
-        
+
         LoadLog();
         CreateSpinner1();
         
@@ -100,8 +94,6 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        
-        
     }
 
     private void LoadLog()
@@ -116,7 +108,6 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	{
     		unregisterReceiver(receiver);
     	}
-    	databaseHelper.onPause();
     	super.onPause();
     }
     
@@ -127,7 +118,6 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	{
     		registerReceiver(receiver, intentFilter);
     	}
-    	databaseHelper.onResrume();
     	super.onResume();
     }
 
@@ -141,7 +131,13 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     private void CreateSpinner1()
     {
     	spinner1 = (Spinner) findViewById(R.id.spinner1);
-        LoadProgramFragment();
+    	FragmentManager fragmentManager = getFragmentManager();
+    	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+    	programFragment = new ProgramFragment();
+		fragmentTransaction.add(R.id.fragment_layout_1, programFragment, tag);
+		settingsFragment = new SettingsFragment();
+		fragmentTransaction.add(R.id.fragment_layout_1, settingsFragment, tag);
+		fragmentTransaction.commit();
         
         spinner1.setOnItemSelectedListener(new OnItemSelectedListener()
         {
@@ -198,20 +194,15 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     		editorFragment = new EditorFragment();
     		editorFragment.GoToEditorFragment(fileName);
     		editorFragment.SetConnection(threadInterface);
-        	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
+        	fragmentTransaction.add(R.id.fragment_layout_1, editorFragment);
         	fragmentTransaction.commit();
         	
     	}
-    	else if(selected == previous)
-    	{
-    		ProgramFragment fragment1 = new ProgramFragment();
-    		fragmentTransaction.add(R.id.fragment_layout_1, fragment1);
-    		fragmentTransaction.commit();
-    	}
+    	
     	else
     	{
-    		ProgramFragment fragment2 = new ProgramFragment();
-    		fragmentTransaction.replace(R.id.fragment_layout_1, fragment2);
+    		fragmentTransaction.detach(settingsFragment);
+    		fragmentTransaction.attach(programFragment);
         	fragmentTransaction.commit();
     	}
     }
@@ -225,6 +216,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
             public void fileSelected(File file) {
             	
         		fileName = file.getName();
+        		DatabaseHelper databaseHelper = new DatabaseHelper(activity);
         		databaseHelper.saveLastOpenedFile(fileName, fileName);
 				databaseHelper.saveSharedFile(fileName, fileName);
         		EditFile();
@@ -258,6 +250,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 					file.createNewFile();
 					newFileDialog = new NewFileDialog(activity);
 					fileName = t + ".txt";
+					DatabaseHelper databaseHelper = new DatabaseHelper(activity);
 					databaseHelper.saveLastOpenedFile(fileName, fileName);
 					databaseHelper.saveSharedFile(fileName, fileName);
 					EditFile();
@@ -313,9 +306,11 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     {
     	FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-    	SettingsFragment fragment = new SettingsFragment();
-    	fragmentTransaction.replace(R.id.fragment_layout_1, fragment);
-    	fragmentTransaction.commitAllowingStateLoss();
+    	//SettingsFragment fragment = new SettingsFragment();
+    	//fragmentTransaction.replace(R.id.fragment_layout_1, fragment, tag);  //.replace(R.id.fragment_layout_1, fragment);
+    	fragmentTransaction.detach(programFragment);
+    	fragmentTransaction.attach(settingsFragment);
+    	fragmentTransaction.commit();
     }
     
     public void EditFile()
@@ -463,7 +458,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 				e.printStackTrace();
 			}
 		}
-		databaseHelper.onPause();
+		
 		if(receiver != null)
 		{
 			unregisterReceiver(receiver);

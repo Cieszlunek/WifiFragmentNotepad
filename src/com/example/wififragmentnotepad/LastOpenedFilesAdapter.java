@@ -30,6 +30,7 @@ public class LastOpenedFilesAdapter extends BaseAdapter{
 		{
 			cursor.close();
 		}
+		databaseHelper.onPause();
 	}
 	
 	@Override

@@ -8,11 +8,9 @@ import android.database.sqlite.SQLiteDatabase;
 public class DatabaseHelper {
 	private DatabaseClass dbc;
 	private SQLiteDatabase database;
-	private Context context;
 	
 	public DatabaseHelper(Context context)
 	{
-		this.context = context;
 		dbc = new DatabaseClass(context);
 		database = dbc.getWritableDatabase();
 	}
@@ -90,7 +88,18 @@ public class DatabaseHelper {
 	
 	public void onResrume()
 	{
-		dbc = new DatabaseClass(context);
-		database = dbc.getWritableDatabase();
+	}
+	
+	@Override
+	public void finalize()
+	{
+		database.close();
+		dbc.close();
+		try {
+			super.finalize();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
