@@ -28,6 +28,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	private EditText editText;
 	public String fileName;
 	private boolean pressed_enter = false;
+	public Object ToLockEditor = new Object();
 	
 	//private Socket socket = null;
 	//private boolean socket_is_not_null = false;
@@ -70,24 +71,28 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             public boolean onKey(View v, int keyCode, KeyEvent event) {
             	if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER )
             	{
+            		//TODO enter
             		if(!pressed_enter)
             		{
             			int pos = editText.getSelectionStart();
             			Editable old = editText.getText();
             			int length = old.length();
-            			if(pos == length)
+            			synchronized(ToLockEditor)
             			{
-            				editText.append(System.getProperty("line.separator"));
-            			}
-            			else if(pos == 0)
-            			{
-            				editText.setText(System.getProperty("line.separator") + old);
-            			}
-            			else
-            			{
-	            			CharSequence pre = old.subSequence(0, pos);
-	            			CharSequence after = old.subSequence(pos, old.length());
-	            			editText.setText(pre + System.getProperty("line.separator") + after); //   append(System.getProperty("line.separator"));
+	            			if(pos == length)
+	            			{
+	            				editText.append(System.getProperty("line.separator"));
+	            			}
+	            			else if(pos == 0)
+	            			{
+	            				editText.setText(System.getProperty("line.separator") + old);
+	            			}
+	            			else
+	            			{
+		            			CharSequence pre = old.subSequence(0, pos);
+		            			CharSequence after = old.subSequence(pos, old.length());
+		            			editText.setText(pre + System.getProperty("line.separator") + after); //   append(System.getProperty("line.separator"));
+	            			}
             			}
             			if(threadInterface != null)
             			{
@@ -95,7 +100,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             			}
             			else
             			{
-            				Log.i("Key pressed", "enter");
+            				Log.i("Key pressed enter", String.valueOf(pos));
             			}
             			pressed_enter = true;//aby enter nie odpali³ siê dwa razy - niweluje b³¹d
             			return true;
@@ -125,7 +130,6 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -142,7 +146,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+				// 
 				e.printStackTrace();
 			}
 		}
@@ -184,6 +188,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 				int arg3) {
 			if(threadInterface != null)
 			{
+				//TODO key
 				int temp = arg1 + arg3;
 				//int length = 
 				if(temp > previous_text_length)
@@ -308,6 +313,72 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	@Override
 	public void SetConnection(ThreadInterface ti) {
 		threadInterface = ti;
+	}
+
+
+	@Override
+	public void SendData(String data) {
+		final String[] str = data.split(",");
+		final int position;
+		position = Integer.parseInt(str[1]);
+		
+		getActivity().runOnUiThread(new Runnable() {            
+		    @Override
+		    public void run() {
+		    	Editable old = editText.getText();
+		    	if( ("Enter").equals(str[0]) )
+		    	{
+		    		if(position == 0)
+		    		{
+		    			editText.setText(System.getProperty("line.separator") + old);
+		    		}
+		    		else if(position == old.length())
+		    		{
+		    			editText.append(System.getProperty("line.separator"));
+		    		}
+		    		else
+		    		{
+		    			String pre = (String) old.subSequence(0, position);
+		    			pre += System.getProperty("line.separator") + (String)(old.subSequence(position, old.length()));
+		    			editText.setText((CharSequence)pre);
+		    		}
+		    	}
+		    	else if(("backspace").equals(str[0]))
+		    	{
+		    		String neww = null;
+	                if (position - 1 > 0)
+	                {
+	                    neww = (String) old.subSequence(0, position);
+	                    String t = (String) old.subSequence(position + 1, old.length());
+	                    neww += t;
+	                }
+	                else
+	                {
+	                    if (old.length() > 1)
+	                    {
+	                        neww = (String) old.subSequence(1, old.length() - 1);
+	                    }
+	                    else
+	                    {
+	                        neww = "";
+	                    }
+	                }
+	                editText.setText((CharSequence)neww);
+		    	}
+		    	else if (position != old.length())
+	            {
+	                String neww = (String) old.subSequence(0, position);
+	               
+	                String t = (String) old.subSequence(position, old.length()-1);
+	                neww += str[0] + t;
+	                editText.setText( (CharSequence)neww );
+	            }
+	            else
+	            {
+	                editText.append(str[0]);// += str[0];
+	            }
+		    }
+		});
 	}
 
 	//TODO implement receive data

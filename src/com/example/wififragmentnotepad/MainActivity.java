@@ -357,11 +357,11 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		threadInterface = (ThreadInterface) th;
 		if( ("Master").equals(str) )
 		{
-			th.Initialize("192.168.1.100", port, true);
+			th.Initialize("169.254.136.231", port, true);
 		}
 		else
 		{
-			th.Initialize("192.168.1.100", port, false);
+			th.Initialize("169.254.136.231", port, false);
 		}
 	}
 	
@@ -693,6 +693,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 	private boolean isGroupOwner;
 	public Object ToLock = new Object();
 	private String DataToSend = "";
+	private EditorFragmentInterface editorFragmentInterface = null;
 	//private Intent intent;
 	
 	public WifiDirectThread()
@@ -722,14 +723,20 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 					}
 					else if( ("#noAction").equals(str) )
 					{
-						//Log.e("tag", str);
 					}
 					else
 					{
-						Log.e("tag", str);
+						if(editorFragmentInterface != null)
+						{
+							editorFragmentInterface.SendData(str);
+						}
+						else
+						{
+							Log.e("tag", str);
+						}
 						//TODO implement writedata
 					}
-					Thread.sleep(100);
+					Thread.sleep(300);
 					
 					synchronized(ToLock)
 					{
@@ -744,16 +751,16 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						}
 					}
 					writer.flush();
-					Thread.sleep(100);
+					Thread.sleep(300);
 				}
 				reader.close();
 				writer.close();
 				socket.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				// 
 				e.printStackTrace();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+				// 
 				e.printStackTrace();
 			}
 		}
@@ -780,7 +787,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						}
 					}
 					writer.flush();
-					Thread.sleep(100);
+					Thread.sleep(300);
 					String str = reader.readLine();
 					if( ("#exit").equals(str) )
 					{
@@ -793,20 +800,28 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 					}
 					else
 					{
-						Log.e("tag", str);
+						if(editorFragmentInterface != null)
+						{
+							editorFragmentInterface.SendData(str);
+						}
+						else
+						{
+							Log.e("tag", str);
+						}
+						
 						//TODO implement writedata
 					}
-					Thread.sleep(100);
+					Thread.sleep(300);
 				}
 				reader.close();
 				writer.close();
 				socket.close();
 				
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				// 
 				e.printStackTrace();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+				// 
 				e.printStackTrace();
 			}
 		}
@@ -846,6 +861,12 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 	@Override
 	public void Restart() {
 		run();
+	}
+
+	@Override
+	public void setEditorFragment(
+			EditorFragmentInterface editorFragmentInterface) {
+		this.editorFragmentInterface = editorFragmentInterface;
 	}
 
 
