@@ -865,7 +865,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 			}
 			else
 			{
-				DataToSend += "\n" + data;
+				DataToSend += "\r\n" + data;
 			}
 		}
 		

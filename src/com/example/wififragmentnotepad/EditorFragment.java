@@ -333,9 +333,13 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 
 	@Override
 	public void SendData(String data) {
-		final String[] str = data.split(",");
+		final String[] str;
 		final int position;
-		position = Integer.parseInt(str[1]);
+		
+			 str = data.split(",");
+			 position = Integer.parseInt(str[1]);
+		
+	
 		
 		getActivity().runOnUiThread(new Runnable() {            
 		    @Override
@@ -365,7 +369,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	                if (position - 1 > 0)
 	                {
 	                    neww = String.valueOf(old.subSequence(0, position));
-	                    String t = String.valueOf(old.subSequence(position + 1, old.length()));
+	                    String t = String.valueOf(old.subSequence(position, old.length()));
 	                    neww += t;
 	                }
 	                else
