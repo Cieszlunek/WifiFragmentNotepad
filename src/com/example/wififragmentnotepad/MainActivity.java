@@ -297,13 +297,20 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	EditorFragment editorFragment = new EditorFragment();
 		editorFragment.GoToEditorFragment(fileName);
-		editorFragment.SetConnection(threadInterface);
+		//editorFragment.SetConnection(threadInterface);
 		if(threadInterface != null)
 		{
-			threadInterface.setEditorFragment((EditorFragmentInterface)editorFragment);
+			EditorFragmentInterface efi = (EditorFragmentInterface)editorFragment;
+			editorFragment.SetConnection(threadInterface);
+			threadInterface.setEditorFragment(efi);
+		}
+		else
+		{
+			Log.e("thrad interface is ", "null");
 		}
     	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
     	fragmentTransaction.commit();
+    	
     	editing = true;
     }
 
@@ -725,6 +732,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 					}
 					else if( ("#noAction").equals(str) )
 					{
+						//Log.e("tag", "#noAction");
 					}
 					else
 					{
@@ -734,7 +742,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						}
 						else
 						{
-							//Log.e("tag", str);
+							Log.e("tag", str);
 						}
 						//TODO implement writedata
 					}
@@ -753,6 +761,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 							if(GO)
 							writer.println("#noAction");
 						}
+						//Log.e("tag", "toLock");
 					}
 					writer.flush();
 					Thread.sleep(300);

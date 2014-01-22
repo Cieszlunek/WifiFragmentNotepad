@@ -200,8 +200,16 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 				//int length = 
 				if(temp > previous_text_length)
 				{
-					Log.i("key pressed", arg0.subSequence(temp - 1, temp).toString());
-					threadInterface.TrySendData(arg0.subSequence(temp - 1, temp).toString() +"," + arg1);
+					
+					if(threadInterface != null)
+					{
+						threadInterface.TrySendData(arg0.subSequence(temp - 1, temp).toString() +"," + arg1);
+						Log.i("OKKK", arg0.subSequence(temp - 1, temp).toString());
+					}
+					else
+					{
+						Log.i("key pressed", arg0.subSequence(temp - 1, temp).toString());
+					}
 				}
 				else if(temp == previous_text_length)
 				{
@@ -332,6 +340,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		getActivity().runOnUiThread(new Runnable() {            
 		    @Override
 		    public void run() {
+		    	Log.e("tag", "Receive data, want to print on screen");
 		    	Editable old = editText.getText();
 		    	if( ("Enter").equals(str[0]) )
 		    	{
