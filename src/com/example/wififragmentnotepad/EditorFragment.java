@@ -123,7 +123,14 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	@Override
 	public void onPause() {
 		//super onPause();
-		saveStringToFile(fileName, editText.getText().toString());
+		if (1 == saveStringToFile(fileName, editText.getText().toString()))
+		{
+			Log.e("saved file", fileName);
+		} 
+		else
+		{
+			Log.e("unsaved file", fileName);
+		}
 		if(threadInterface != null)
 		{
 			threadInterface.Stop();
@@ -223,7 +230,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		String ret = "";
 		try
 		{
-			File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + filePath);
+			File file = new File(filePath);
 			InputStream inputStream = new FileInputStream(file);
 			if(inputStream != null)
 			{
@@ -281,7 +288,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	{
 		try
 		{
-			File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + filePath);
+			File file = new File(filePath);
 			PrintWriter writer = new PrintWriter(file);
 			writer.print("");
 			writer.close();
@@ -295,7 +302,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		}
 		catch(Exception e)
 		{
-			
+			Log.e("Exception while saving file", e.getMessage());
 		}
 		return 0;
 	}

@@ -196,7 +196,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         fileDialog.addFileListener(new FileDialog.FileSelectedListener() {
             public void fileSelected(File file) {
             	
-        		fileName = file.getName();
+        		fileName = file.getAbsolutePath();// file.getName();
         		DatabaseHelper databaseHelper = new DatabaseHelper(activity);
         		databaseHelper.saveLastOpenedFile(fileName, fileName);
 				databaseHelper.saveSharedFile(fileName, fileName);
@@ -221,7 +221,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 			public void onClick(DialogInterface dialog, int which){
 				String t = input.getText().toString();
 				//check if file exists / create file
-				File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + t + ".txt");
+				File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()  + "/" + t + ".txt");
 				if(!file.exists())
 				{
 					//et.setText(t);
@@ -426,20 +426,18 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	@Override
 	public void onStop()
 	{
-		if(socket != null)
-		{
-			try {
-				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-				out.println("#exit");
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		if(threadInterface != null)
+			threadInterface.Stop();
 		
-		if(receiver != null)
+		try
+		{if(receiver != null)
 		{
 			unregisterReceiver(receiver);
+		}
+		}
+		catch(RuntimeException ex)
+		{
+			
 		}
 		super.onStop();
 	}
@@ -732,7 +730,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						}
 						else
 						{
-							Log.e("tag", str);
+							//Log.e("tag", str);
 						}
 						//TODO implement writedata
 					}
@@ -742,11 +740,13 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 					{
 						if(!("").equals(DataToSend))
 						{
+							if(GO)
 							writer.println(DataToSend);
 							DataToSend = "";
 						}
 						else
 						{
+							if(GO)
 							writer.println("#noAction");
 						}
 					}
