@@ -76,23 +76,6 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	            		//TODO enter
 	            		
 	            			int pos = editText.getSelectionStart();
-	            			Editable old = editText.getText();
-	            			int length = old.length();
-	            			
-		            			if(pos == length)
-		            			{
-		            				editText.append(System.getProperty("line.separator"));
-		            			}
-		            			else if(pos == 0)
-		            			{
-		            				editText.setText(System.getProperty("line.separator") + old);
-		            			}
-		            			else
-		            			{
-			            			CharSequence pre = old.subSequence(0, pos);
-			            			CharSequence after = old.subSequence(pos, old.length());
-			            			editText.setText(pre + System.getProperty("line.separator") + after); //   append(System.getProperty("line.separator"));
-		            			}
 	            			
 	            			if(threadInterface != null)
 	            			{
@@ -108,22 +91,40 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	            	}
 	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
 	            	{
-	            		threadInterface.TrySendData("backspace," + editText.getSelectionStart());
+	            		if(threadInterface != null)
+            			{
+            				threadInterface.TrySendData("backspace," + editText.getSelectionStart());
+            			}
 	            		pressed_enter = true;
 	            		return true;
+	            	}
+	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_BACK)
+	            	{
+	            		
 	            	}
 	            	else
 	            	{
-	            		threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
+	            		
+	            			if(threadInterface != null)
+	            			{
+	            				threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
+	            			}
 	            		pressed_enter = true;
 	            		return true;
+	            		
+	            			
+	            		
 	            	}
+        		}else if(keyCode == KeyEvent.KEYCODE_DEL) {
+        			
         		}
         		else
         		{
+        			
         			pressed_enter = false;
         			return false;
         		}
+				return false;
             }});
 
         previous_text_length = editText.getText().length();
@@ -205,6 +206,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		@Override
 		public void onTextChanged(CharSequence arg0, int arg1, int arg2,
 				int arg3) {
+			/*
 			if(threadInterface != null)
 			{
 				if( ("").equals(arg0))
@@ -245,6 +247,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 			{
 				Log.e("thread interface", " is null");
 			}
+			*/
 		}
 		
 	};
