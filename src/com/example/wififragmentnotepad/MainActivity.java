@@ -298,6 +298,10 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	EditorFragment editorFragment = new EditorFragment();
 		editorFragment.GoToEditorFragment(fileName);
 		editorFragment.SetConnection(threadInterface);
+		if(threadInterface != null)
+		{
+			threadInterface.setEditorFragment((EditorFragmentInterface)editorFragment);
+		}
     	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
     	fragmentTransaction.commit();
     	editing = true;

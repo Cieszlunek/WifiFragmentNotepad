@@ -345,8 +345,8 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		    		}
 		    		else
 		    		{
-		    			String pre = (String) old.subSequence(0, position);
-		    			pre += System.getProperty("line.separator") + (String)(old.subSequence(position, old.length()));
+		    			String pre = String.valueOf( old.subSequence(0, position));
+		    			pre += System.getProperty("line.separator") + String.valueOf(old.subSequence(position, old.length()));
 		    			editText.setText((CharSequence)pre);
 		    		}
 		    	}
@@ -355,15 +355,15 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		    		String neww = null;
 	                if (position - 1 > 0)
 	                {
-	                    neww = (String) old.subSequence(0, position);
-	                    String t = (String) old.subSequence(position + 1, old.length());
+	                    neww = String.valueOf(old.subSequence(0, position));
+	                    String t = String.valueOf(old.subSequence(position + 1, old.length()));
 	                    neww += t;
 	                }
 	                else
 	                {
 	                    if (old.length() > 1)
 	                    {
-	                        neww = (String) old.subSequence(1, old.length() - 1);
+	                        neww = String.valueOf(old.subSequence(1, old.length() - 1));
 	                    }
 	                    else
 	                    {
@@ -374,15 +374,15 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		    	}
 		    	else if (position != old.length())
 	            {
-	                String neww = (String) old.subSequence(0, position);
+	                String neww = String.valueOf(old.subSequence(0, position));
 	               
-	                String t = (String) old.subSequence(position, old.length()-1);
+	                String t = String.valueOf(old.subSequence(position, old.length()-1));
 	                neww += str[0] + t;
 	                editText.setText( (CharSequence)neww );
 	            }
 	            else
 	            {
-	                editText.append(str[0]);// += str[0];
+	                editText.append((CharSequence)str[0]);// += str[0];
 	            }
 		    }
 		});
