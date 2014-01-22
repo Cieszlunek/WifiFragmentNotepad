@@ -77,8 +77,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             			int pos = editText.getSelectionStart();
             			Editable old = editText.getText();
             			int length = old.length();
-            			synchronized(ToLockEditor)
-            			{
+            			
 	            			if(pos == length)
 	            			{
 	            				editText.append(System.getProperty("line.separator"));
@@ -93,7 +92,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		            			CharSequence after = old.subSequence(pos, old.length());
 		            			editText.setText(pre + System.getProperty("line.separator") + after); //   append(System.getProperty("line.separator"));
 	            			}
-            			}
+            			
             			if(threadInterface != null)
             			{
             				threadInterface.TrySendData("Enter," + pos);
@@ -267,8 +266,12 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 					{
 						if(temp[i].isEmpty())
 						{
-							threadInterface.TrySendData( "Enter" + "," + sum );
-							sum += 1;
+							//TODO zlikwidowa³em entera pierwszego
+							if(sum != 0 && temp.length > 1)
+							{
+								threadInterface.TrySendData( "Enter" + "," + sum );
+								sum += 1;
+							}
 						}
 						else
 						{
@@ -333,11 +336,8 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 
 	@Override
 	public void SendData(String data) {
-		final String[] str;
-		final int position;
-		
-			 str = data.split(",");
-			 position = Integer.parseInt(str[1]);
+		final String[] str = data.split(",");
+		final int position = Integer.parseInt(str[1]);;
 		
 	
 		
@@ -376,7 +376,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	                {
 	                    if (old.length() > 1)
 	                    {
-	                        neww = String.valueOf(old.subSequence(1, old.length() - 1));
+	                        neww = String.valueOf(old.subSequence(1, old.length()));
 	                    }
 	                    else
 	                    {
@@ -389,7 +389,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	            {
 	                String neww = String.valueOf(old.subSequence(0, position));
 	               
-	                String t = String.valueOf(old.subSequence(position, old.length()-1));
+	                String t = String.valueOf(old.subSequence(position, old.length()));
 	                neww += str[0] + t;
 	                editText.setText( (CharSequence)neww );
 	            }
