@@ -194,6 +194,10 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 				int arg3) {
 			if(threadInterface != null)
 			{
+				if( ("").equals(arg0))
+				{
+					return;
+				}
 				//TODO key
 				int temp = arg1 + arg3;
 				//int length = 
@@ -397,6 +401,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	            {
 	                editText.append((CharSequence)str[0]);// += str[0];
 	            }
+		    	editText.refreshDrawableState();
 		    }
 		});
 	}
