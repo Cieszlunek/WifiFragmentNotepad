@@ -300,9 +300,9 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		//editorFragment.SetConnection(threadInterface);
 		if(threadInterface != null)
 		{
-			EditorFragmentInterface efi = (EditorFragmentInterface)editorFragment;
+			threadInterface.setEditorFragment((EditorFragmentInterface)editorFragment);
 			editorFragment.SetConnection(threadInterface);
-			threadInterface.setEditorFragment(efi);
+			threadInterface.setEditorFragment((EditorFragmentInterface)editorFragment);
 		}
 		else
 		{
@@ -819,6 +819,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 						}
 						else
 						{
+							//e
 							Log.e("tag", str);
 						}
 						

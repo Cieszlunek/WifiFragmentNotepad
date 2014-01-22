@@ -69,48 +69,61 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
         editText.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-            	if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER )
-            	{
-            		//TODO enter
-            		if(!pressed_enter)
-            		{
-            			int pos = editText.getSelectionStart();
-            			Editable old = editText.getText();
-            			int length = old.length();
-            			
-	            			if(pos == length)
+            	if(!pressed_enter)
+        		{
+	            	if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER )
+	            	{
+	            		//TODO enter
+	            		
+	            			int pos = editText.getSelectionStart();
+	            			Editable old = editText.getText();
+	            			int length = old.length();
+	            			
+		            			if(pos == length)
+		            			{
+		            				editText.append(System.getProperty("line.separator"));
+		            			}
+		            			else if(pos == 0)
+		            			{
+		            				editText.setText(System.getProperty("line.separator") + old);
+		            			}
+		            			else
+		            			{
+			            			CharSequence pre = old.subSequence(0, pos);
+			            			CharSequence after = old.subSequence(pos, old.length());
+			            			editText.setText(pre + System.getProperty("line.separator") + after); //   append(System.getProperty("line.separator"));
+		            			}
+	            			
+	            			if(threadInterface != null)
 	            			{
-	            				editText.append(System.getProperty("line.separator"));
-	            			}
-	            			else if(pos == 0)
-	            			{
-	            				editText.setText(System.getProperty("line.separator") + old);
+	            				threadInterface.TrySendData("Enter," + pos);
 	            			}
 	            			else
 	            			{
-		            			CharSequence pre = old.subSequence(0, pos);
-		            			CharSequence after = old.subSequence(pos, old.length());
-		            			editText.setText(pre + System.getProperty("line.separator") + after); //   append(System.getProperty("line.separator"));
+	            				Log.i("Key pressed enter", String.valueOf(pos));
 	            			}
-            			
-            			if(threadInterface != null)
-            			{
-            				threadInterface.TrySendData("Enter," + pos);
-            			}
-            			else
-            			{
-            				Log.i("Key pressed enter", String.valueOf(pos));
-            			}
-            			pressed_enter = true;//aby enter nie odpali³ siê dwa razy - niweluje b³¹d
-            			return true;
-            		}
-            		else
-            		{
-            			pressed_enter = false;
-            			return false;
-            		}
-            	}
-            	return false;
+	            			pressed_enter = true;//aby enter nie odpali³ siê dwa razy - niweluje b³¹d
+	            			return true;
+	            		
+	            	}
+	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
+	            	{
+	            		threadInterface.TrySendData("backspace," + editText.getSelectionStart());
+	            		pressed_enter = true;
+	            		return true;
+	            	}
+	            	else
+	            	{
+	            		threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
+	            		pressed_enter = true;
+	            		return true;
+	            	}
+        		}
+        		else
+        		{
+        			pressed_enter = false;
+        			return false;
+        		}
             }});
 
         previous_text_length = editText.getText().length();
@@ -207,7 +220,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 					if(threadInterface != null)
 					{
 						threadInterface.TrySendData(arg0.subSequence(temp - 1, temp).toString() +"," + arg1);
-						Log.i("OKKK", arg0.subSequence(temp - 1, temp).toString());
+						//Log.i("OKKK", arg0.subSequence(temp - 1, temp).toString());
 					}
 					else
 					{
