@@ -69,8 +69,8 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
         editText.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-            	if(!pressed_enter)
-        		{
+            	//if(!pressed_enter)
+        		//{
 	            	if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER )
 	            	{
 	            		//TODO enter
@@ -88,43 +88,39 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	            			pressed_enter = true;//aby enter nie odpali³ siê dwa razy - niweluje b³¹d
 	            			return true;
 	            		
-	            	}
-	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
-	            	{
-	            		if(threadInterface != null)
+	            //	}
+	            	
+        		}else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
+            	{
+            		if(threadInterface != null)
+        			{
+        				threadInterface.TrySendData("backspace," + editText.getSelectionStart());
+        			}
+            		pressed_enter = true;
+            		return true;
+            	}
+            	else if(event.getKeyCode() == KeyEvent.KEYCODE_BACK)
+            	{
+            		
+            	}
+            	else
+            	{
+            		
+            			if(threadInterface != null)
             			{
-            				threadInterface.TrySendData("backspace," + editText.getSelectionStart());
+            				threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
             			}
-	            		pressed_enter = true;
-	            		return true;
-	            	}
-	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_BACK)
-	            	{
-	            		
-	            	}
-	            	else
-	            	{
-	            		
-	            			if(threadInterface != null)
-	            			{
-	            				threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
-	            			}
-	            		pressed_enter = true;
-	            		return true;
-	            		
-	            			
-	            		
-	            	}
-        		}else if(keyCode == KeyEvent.KEYCODE_DEL) {
-        			
-        		}
-        		else
-        		{
+            		pressed_enter = true;
+            		return true;
+            		
+            			
+            		
+            	}
+        	
         			
         			pressed_enter = false;
         			return false;
-        		}
-				return false;
+        		
             }});
 
         previous_text_length = editText.getText().length();
