@@ -366,6 +366,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		    @Override
 		    public void run() {
 		    	Log.e("tag", "Receive data, want to print on screen");
+		    	int pos_archaic = editText.getSelectionEnd();
 		    	Editable old = editText.getText();
 		    	if( ("Enter").equals(str[0]) )
 		    	{
@@ -383,6 +384,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		    			pre += System.getProperty("line.separator") + String.valueOf(old.subSequence(position, old.length()));
 		    			editText.setText((CharSequence)pre);
 		    		}
+		    		editText.setSelection(pos_archaic+1);
 		    	}
 		    	else if(("backspace").equals(str[0]))
 		    	{
@@ -397,12 +399,14 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	                	else {
 	                		neww = String.valueOf(old.subSequence(0, old.length() - 1));
 	                	}
+	                	editText.setSelection(pos_archaic-1);
 	                }
 	                else
 	                {
 	                    if (old.length() > 1)
 	                    {
 	                        neww = String.valueOf(old.subSequence(1, old.length()));
+	                        editText.setSelection(pos_archaic-1);
 	                    }
 	                    else
 	                    {
@@ -418,13 +422,16 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	                String t = String.valueOf(old.subSequence(position, old.length()));
 	                neww += str[0] + t;
 	                editText.setText( (CharSequence)neww );
+	                editText.setSelection(pos_archaic+1);
 	            }
 	            else
 	            {
 	                editText.append((CharSequence)str[0]);// += str[0];
+	                editText.setSelection(pos_archaic+1);
 	            }
 		    	editText.refreshDrawableState();
 		    	pressed_key = true;
+		    	
 		    }
 		});
 	}
