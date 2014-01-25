@@ -69,8 +69,8 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
         editText.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-            	int pos = editText.getSelectionStart();
-            	if (event.getAction() != KeyEvent.ACTION_UP) {
+            	int pos = editText.getSelectionEnd();
+            	if (event.getAction() != KeyEvent.ACTION_DOWN) {
             		return false;
             	}
             	else {
@@ -89,7 +89,23 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		            	{
 		            		Log.i("Key pressed enter", String.valueOf(pos));
 		            	}
-		            	return false;	
+		            	
+		            	if(pos == 0)
+			    		{
+			    			editText.setText(System.getProperty("line.separator") + editText.getText());
+			    		}
+			    		else if(pos >= editText.getText().length())
+			    		{
+			    			editText.append(System.getProperty("line.separator"));
+			    		}
+			    		else
+			    		{
+			    			String pre = String.valueOf( old.subSequence(0, position));
+			    			pre += System.getProperty("line.separator") + String.valueOf(old.subSequence(position, old.length()));
+			    			editText.setText((CharSequence)pre);
+			    		}
+		            	
+		            	return true;	
 	        		}
 	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
 	            	{
@@ -204,16 +220,13 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 			
 			if(threadInterface != null && pressed_key)
 			{
-				if( ("").equals(arg0) || arg0 == null)
+				if( ("").equals(arg0) || arg0 == null || (System.getProperty("line.separator")).equals(arg0))
 				{
 					return;
 				}
 				//TODO key
 				int temp = arg1 + arg3;
 				//int length = 
-				if(temp > previous_text_length)
-				{
-					
 					if(threadInterface != null)
 					{
 						threadInterface.TrySendData(arg0.subSequence(temp - 1, temp).toString() +"," + arg1);
@@ -223,20 +236,8 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 					{
 						Log.i("key pressed", arg0.subSequence(temp - 1, temp).toString());
 					}
-				}
-				else if(temp == previous_text_length)
-				{
-					//s³owo zatwierdzone, nic nie robiæ i siê cieszyæ
-				}
-				/*else
-				{
-					if(arg0.equals(null))
-					{
-					Log.i("Key pressed", "backspace");
-					}
-					threadInterface.TrySendData("backspace," + arg1);
-				}*/
-				previous_text_length = temp;
+				
+				//previous_text_length = temp;
 			}
 			else
 			{
