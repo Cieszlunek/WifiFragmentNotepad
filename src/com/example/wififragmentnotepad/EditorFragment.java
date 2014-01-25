@@ -29,6 +29,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	public String fileName;
 	public static boolean pressed_key = true;
 	public Object ToLockEditor = new Object();
+	private boolean enter_is_pressed = false;
 	
 	//private Socket socket = null;
 	//private boolean socket_is_not_null = false;
@@ -81,6 +82,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER)
 		            {
 		            	//TODO enter
+	            		enter_is_pressed = true;
 		            	if(threadInterface != null)
 		            	{
 		            		threadInterface.TrySendData("Enter," + pos);
@@ -100,8 +102,8 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 			    		}
 			    		else
 			    		{
-			    			String pre = String.valueOf( old.subSequence(0, position));
-			    			pre += System.getProperty("line.separator") + String.valueOf(old.subSequence(position, old.length()));
+			    			String pre = String.valueOf( editText.getText().subSequence(0, pos));
+			    			pre += System.getProperty("line.separator") + String.valueOf(editText.getText().subSequence(pos, editText.getText().length()));
 			    			editText.setText((CharSequence)pre);
 			    		}
 		            	
@@ -217,7 +219,11 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		@Override
 		public void onTextChanged(CharSequence arg0, int arg1, int arg2,
 				int arg3) {
-			
+			if(enter_is_pressed)
+			{
+				enter_is_pressed = false;
+				return;
+			}
 			if(threadInterface != null && pressed_key)
 			{
 				if( ("").equals(arg0) || arg0 == null || (System.getProperty("line.separator")).equals(arg0))
