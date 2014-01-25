@@ -27,7 +27,7 @@ import android.widget.EditText;
 public class EditorFragment extends Fragment implements EditorFragmentInterface {
 	private EditText editText;
 	public String fileName;
-	private boolean pressed_enter = false;
+	private boolean pressed_key = false;
 	public Object ToLockEditor = new Object();
 	
 	//private Socket socket = null;
@@ -69,57 +69,50 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
         editText.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-            	//if(!pressed_enter)
-        		//{
-	            	if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER )
+            	int pos = editText.getSelectionStart();
+            	if(event.getKeyCode() == KeyEvent.KEYCODE_BACK)
+            	{
+            		return false;
+            	}
+            	else if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER )
+	            {
+	            	//TODO enter
+	            	if(threadInterface != null)
 	            	{
-	            		//TODO enter
-	            		
-	            			int pos = editText.getSelectionStart();
-	            			
-	            			if(threadInterface != null)
-	            			{
-	            				threadInterface.TrySendData("Enter," + pos);
-	            			}
-	            			else
-	            			{
-	            				Log.i("Key pressed enter", String.valueOf(pos));
-	            			}
-	            			pressed_enter = true;//aby enter nie odpali³ siê dwa razy - niweluje b³¹d
-	            			return true;
-	            		
-	            //	}
-	            	
-        		}else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
+	            		threadInterface.TrySendData("Enter," + pos);
+	            	}
+	            	else
+	            	{
+	            		Log.i("Key pressed enter", String.valueOf(pos));
+	            	}
+	            	return false;	
+        		}
+            	else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
             	{
             		if(threadInterface != null)
         			{
         				threadInterface.TrySendData("backspace," + editText.getSelectionStart());
         			}
-            		pressed_enter = true;
-            		return true;
-            	}
-            	else if(event.getKeyCode() == KeyEvent.KEYCODE_BACK)
-            	{
-            		
+            		else
+            		{
+            			Log.i("Key pressed backspace", String.valueOf(pos));
+            		}
+            		return false;
             	}
             	else
             	{
-            		
-            			if(threadInterface != null)
-            			{
-            				threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
-            			}
-            		pressed_enter = true;
-            		return true;
-            		
-            			
-            		
+            		Log.i("Key pressed " + event.getUnicodeChar() , String.valueOf(pos));
+            		if(threadInterface != null)
+            		{
+            			threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
+            		}
+            		else
+            		{
+            			Log.i("Key pressed " + event.getUnicodeChar() , String.valueOf(pos));
+            		}
+            		return false;
             	}
         	
-        			
-        			pressed_enter = false;
-        			return false;
         		
             }});
 
