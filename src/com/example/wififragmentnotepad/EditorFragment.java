@@ -27,7 +27,7 @@ import android.widget.EditText;
 public class EditorFragment extends Fragment implements EditorFragmentInterface {
 	private EditText editText;
 	public String fileName;
-	private boolean pressed_key = false;
+	public static boolean pressed_key = true;
 	public Object ToLockEditor = new Object();
 	
 	//private Socket socket = null;
@@ -70,49 +70,55 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
             	int pos = editText.getSelectionStart();
-            	if(event.getKeyCode() == KeyEvent.KEYCODE_BACK)
-            	{
+            	if (event.getAction() != KeyEvent.ACTION_UP) {
             		return false;
             	}
-            	else if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER )
-	            {
-	            	//TODO enter
-	            	if(threadInterface != null)
+            	else {
+	            	if(event.getKeyCode() == KeyEvent.KEYCODE_BACK)
 	            	{
-	            		threadInterface.TrySendData("Enter," + pos);
+	            		return false;
 	            	}
-	            	else
+	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_ENTER)
+		            {
+		            	//TODO enter
+		            	if(threadInterface != null)
+		            	{
+		            		threadInterface.TrySendData("Enter," + pos);
+		            	}
+		            	else
+		            	{
+		            		Log.i("Key pressed enter", String.valueOf(pos));
+		            	}
+		            	return false;	
+	        		}
+	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
 	            	{
-	            		Log.i("Key pressed enter", String.valueOf(pos));
+	            		if(threadInterface != null)
+	        			{
+	        				threadInterface.TrySendData("backspace," + editText.getSelectionStart());
+	        			}
+	            		else
+	            		{
+	            			Log.i("Key pressed backspace", String.valueOf(pos));
+	            		}
+	            		return false;
 	            	}
-	            	return false;	
-        		}
-            	else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL)
-            	{
-            		if(threadInterface != null)
-        			{
-        				threadInterface.TrySendData("backspace," + editText.getSelectionStart());
-        			}
-            		else
-            		{
-            			Log.i("Key pressed backspace", String.valueOf(pos));
-            		}
-            		return false;
+	            	/*else
+	            	{
+	            		Log.i("Key pressed " + event.getUnicodeChar() , String.valueOf(pos));
+	            		if(threadInterface != null)
+	            		{
+	            			threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
+	            		}
+	            		else
+	            		{
+	            			Log.i("Key pressed " + event.getUnicodeChar() , String.valueOf(pos));
+	            		}
+	            		return false;
+	            	}*/
             	}
-            	else
-            	{
-            		Log.i("Key pressed " + event.getUnicodeChar() , String.valueOf(pos));
-            		if(threadInterface != null)
-            		{
-            			threadInterface.TrySendData(event.getCharacters() + "," + editText.getSelectionStart());
-            		}
-            		else
-            		{
-            			Log.i("Key pressed " + event.getUnicodeChar() , String.valueOf(pos));
-            		}
-            		return false;
-            	}
-        	
+            	
+            	return false;
         		
             }});
 
@@ -195,10 +201,10 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		@Override
 		public void onTextChanged(CharSequence arg0, int arg1, int arg2,
 				int arg3) {
-			/*
-			if(threadInterface != null)
+			
+			if(threadInterface != null && pressed_key)
 			{
-				if( ("").equals(arg0))
+				if( ("").equals(arg0) || arg0 == null)
 				{
 					return;
 				}
@@ -222,21 +228,21 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 				{
 					//s³owo zatwierdzone, nic nie robiæ i siê cieszyæ
 				}
-				else
+				/*else
 				{
 					if(arg0.equals(null))
 					{
 					Log.i("Key pressed", "backspace");
 					}
 					threadInterface.TrySendData("backspace," + arg1);
-				}
+				}*/
 				previous_text_length = temp;
 			}
 			else
 			{
-				Log.e("thread interface", " is null");
+				Log.e("thread interface", " is null. key: " + pressed_key);
 			}
-			*/
+			
 		}
 		
 	};
@@ -346,8 +352,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	@Override
 	public void SendData(String data) {
 		final String[] str = data.split(",");
-		final int position = Integer.parseInt(str[1]);;
-		
+		final int position = Integer.parseInt(str[1]);
 	
 		
 		getActivity().runOnUiThread(new Runnable() {            
@@ -377,9 +382,14 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		    		String neww = null;
 	                if (position - 1 > 0)
 	                {
-	                    neww = String.valueOf(old.subSequence(0, position));
-	                    String t = String.valueOf(old.subSequence(position, old.length()));
-	                    neww += t;
+	                	if (old.length() > position) {
+		                    neww = String.valueOf(old.subSequence(0, position));
+		                    String t = String.valueOf(old.subSequence(position, old.length()));
+		                    neww += t;
+	                	}
+	                	else {
+	                		neww = String.valueOf(old.subSequence(0, old.length() - 1));
+	                	}
 	                }
 	                else
 	                {
@@ -394,7 +404,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	                }
 	                editText.setText((CharSequence)neww);
 		    	}
-		    	else if (position != old.length())
+		    	else if (position < old.length())
 	            {
 	                String neww = String.valueOf(old.subSequence(0, position));
 	               
@@ -407,6 +417,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	                editText.append((CharSequence)str[0]);// += str[0];
 	            }
 		    	editText.refreshDrawableState();
+		    	pressed_key = true;
 		    }
 		});
 	}

@@ -734,15 +734,17 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 					{
 						//Log.e("tag", "#noAction");
 					}
-					else
+					else if (str != null && !("").equals(str))
 					{
 						if(editorFragmentInterface != null)
 						{
+							Log.i("str", str);
+							EditorFragment.pressed_key = false;
 							editorFragmentInterface.SendData(str);
 						}
 						else
 						{
-							Log.e("tag", str);
+							Log.e("tag", str + " " + editorFragmentInterface.toString());
 						}
 						//TODO implement writedata
 					}
@@ -811,16 +813,17 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 					{
 						
 					}
-					else
+					else if (str != null && !("").equals(str))
 					{
 						if(editorFragmentInterface != null)
 						{
+							EditorFragment.pressed_key = false;
 							editorFragmentInterface.SendData(str);
 						}
 						else
 						{
 							//e
-							Log.e("tag", str);
+							Log.e("tag", str + " " + editorFragmentInterface.toString());
 						}
 						
 						//TODO implement writedata
