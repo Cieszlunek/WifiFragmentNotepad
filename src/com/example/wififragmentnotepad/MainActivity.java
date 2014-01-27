@@ -1,5 +1,7 @@
 package com.example.wififragmentnotepad;
 
+import com.example.wififragmentnotepad.DeviceListFragment.DeviceActionListener;
+import com.example.wififragmentnotepad.ProgramFragment.onEditEventListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -8,10 +10,6 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import com.example.wififragmentnotepad.DeviceListFragment.DeviceActionListener;
-import com.example.wififragmentnotepad.ProgramFragment.onEditEventListener;
-
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -44,47 +42,35 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 public class MainActivity extends Activity implements onEditEventListener, ConnectionInterface, SocketsInterface, ConnectionInfoListener, DeviceActionListener, ChannelListener {
-
-	//variables
 	private Spinner spinner1;
-	private int selected = 0, previous = 0;
     private File mPath;   
     private FileDialog fileDialog;
-    private NewFileDialog newFileDialog;
     private Activity activity;
-	public String fileName;    
-	private EditorFragment editorFragment = null;
-	private ProgramFragment programFragment = null;
-	private SettingsFragment settingsFragment;
-	private boolean editing = false;
-	private Socket socket = null;
+	private String fileName;
 	private String log = "";
-	private boolean retryChannel = false;
+	private boolean retryChannel;
 	private DeviceListFragment deviceListFragment;
-	private String tag = "fragment";
-
-	public static final String stringHelp = "String help";
-	
-	private ThreadInterface threadInterface = null;
-	
+	private ThreadInterface threadInterface;
 	private String IP;
-	private int port = 8988;
-
-	private WifiP2pDevice device;
 	private WifiP2pManager manager;
 	private Channel channel;
-	private BroadcastReceiver receiver = null;
-	private final IntentFilter intentFilter = new IntentFilter();
+	private BroadcastReceiver receiver;
 	private PeerListListener peerListListener;
-	//private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-
-
+	
+	private final int PORT = 8988;
+	private final IntentFilter intentFilter = new IntentFilter();
+	private final static int LOAD_PROGRAM_FRAGMENT_NUMBER = 0;
+	private final static int ON_OPEN_FILE_NUMBER = 1;
+	private final static int ON_CREATE_FILE_NUMBER = 2;
+	private final static int LOAD_CONNECTION_FRAGMENT_NUMBER = 3;
+	private final static int LOAD_SETTINGS_FRAGMENT_NUMBER = 4;
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         activity = this;
-
+        retryChannel = false;
         LoadLog();
         CreateSpinner1();
         FragmentManager fragmentManager = getFragmentManager();
@@ -100,26 +86,21 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
     }
 
-    private void LoadLog()
-    {
+    private void LoadLog() {
     	log = "#file kuba.txt";
     }
     
     @Override
-    public void onPause()
-    {
-    	if(receiver != null)
-    	{
+    public void onPause() {
+    	if(receiver != null) {
     		unregisterReceiver(receiver);
     	}
     	super.onPause();
     }
     
     @Override
-    public void onResume()
-    {
-    	if(receiver != null)
-    	{
+    public void onResume() {
+    	if(receiver != null) {
     		registerReceiver(receiver, intentFilter);
     	}
     	super.onResume();
@@ -127,76 +108,59 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
     
-    private void CreateSpinner1()
-    {
+    private void CreateSpinner1() {
     	spinner1 = (Spinner) findViewById(R.id.spinner1);
         spinner1.setOnItemSelectedListener(new OnItemSelectedListener()
         {
-
 			@Override
 			public void onItemSelected(AdapterView<?> arg0, View arg1,
 					int arg2, long arg3) {
-				//previous = selected;
-				selected = arg2;
-				//if(selected != previous)
 				UpdateFragment(arg2);
 			}
 
 			@Override
 			public void onNothingSelected(AdapterView<?> arg0) {
-				// TODO Auto-generated method stub
-				//UpdateFragment(selected);
 			}
         	
         });
     }
     
     private void UpdateFragment(int j) {
-		// TODO Auto-generated method stub    	
-		if(j == 0)
-		{
+		if(j == LOAD_PROGRAM_FRAGMENT_NUMBER) {
 			LoadProgramFragment();
 		}
-		else if(j == 1)
-		{
+		else if(j == ON_OPEN_FILE_NUMBER) {
 			OnOpenFile();
 		}
-		else if(j == 2)
-		{
+		else if(j == ON_CREATE_FILE_NUMBER) {
 			OnCreateFile();
 		}
-		else if(j == 3)
-		{
+		else if(j == LOAD_CONNECTION_FRAGMENT_NUMBER) {
 			LoadConnectionFragment();
 		}
-		else if(j == 4)
-		{
+		else if(j == LOAD_SETTINGS_FRAGMENT_NUMBER) {
 			LoadSettingsFragment();
 		}
 	}
     
-    private void LoadProgramFragment()
-    {
+    private void LoadProgramFragment() {
     	FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	fragmentTransaction.replace(R.id.fragment_layout_1, new ProgramFragment());
     	fragmentTransaction.commit();
     }
     
-    private void OnOpenFile()
-    {
+    private void OnOpenFile() {
     	mPath = new File(Environment.getExternalStorageDirectory() + "//DIR//");
     	fileDialog = new FileDialog(this, mPath);
         fileDialog.setFileEndsWith(".txt");
         fileDialog.addFileListener(new FileDialog.FileSelectedListener() {
             public void fileSelected(File file) {
-            	
-        		fileName = file.getAbsolutePath();// file.getName();
+        		fileName = file.getAbsolutePath();
         		DatabaseHelper databaseHelper = new DatabaseHelper(activity);
         		databaseHelper.saveLastOpenedFile(fileName, fileName);
 				databaseHelper.saveSharedFile(fileName, fileName);
@@ -204,45 +168,35 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
             }
         });
         fileDialog.createFileDialog();
-        if(previous != 1 && previous != 2)
-        	spinner1.setSelection(previous);
     }
     
-    private void OnCreateFile()
-    {
-    	//TODO here
+    private void OnCreateFile() {
     	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 		builder.setTitle("Enter file name");
 		final EditText input = new EditText(activity);
 		input.setInputType(InputType.TYPE_CLASS_TEXT);
 		builder.setView(input);
-		builder.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which){
 				String t = input.getText().toString();
-				//check if file exists / create file
+
 				File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()  + "/" + t + ".txt");
-				if(!file.exists())
-				{
-					//et.setText(t);
+				if(!file.exists()) {
 				}
-				try
-				{
+				try {
 					file.createNewFile();
-					newFileDialog = new NewFileDialog(activity);
 					fileName = t + ".txt";
 					DatabaseHelper databaseHelper = new DatabaseHelper(activity);
 					databaseHelper.saveLastOpenedFile(fileName, fileName);
 					databaseHelper.saveSharedFile(fileName, fileName);
 					EditFile();
 				}
-				catch(Exception ex)
-				{
-				
+				catch(Exception ex) { 
 				}
 			}
 		});
-		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which){
 				dialog.cancel();
@@ -250,68 +204,50 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		});
 		Dialog dialog = builder.create();
 		dialog.show();
-					
-
-        if(editing)
-        	spinner1.setSelection(previous);
     }
     
-    private void LoadConnectionFragment()
-    {
-    	//FragmentManager fragmentManager = getFragmentManager();
-    	//FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-    	//ConnectionFragment fragment1 = new ConnectionFragment();
-    	//fragmentTransaction.add(R.id.fragment_layout_1, fragment);
-    	//fragmentTransaction.replace(R.id.fragment_layout_1, fragment1);
-    	//fragmentTransaction.commit();
+    private void LoadConnectionFragment() {
     	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 		builder.setTitle("Select connection type");
 		final StringAdapter adapter = new StringAdapter();
 		adapter.setConnectionList();
-		builder.setAdapter(adapter, new OnClickListener(){
+		builder.setAdapter(adapter, new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface arg0, int arg1) {
 				setConnectionType(String.valueOf(adapter.getItem(arg1)));
 			}
 		});
-		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			@Override
-			public void onClick(DialogInterface dialog, int which){
+			public void onClick(DialogInterface dialog, int which) {
 				dialog.cancel();
 			}
 		});
 		Dialog dialog = builder.create();
 		dialog.show();
     }
-    private void LoadSettingsFragment()
-    {
+    private void LoadSettingsFragment() {
     	FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	fragmentTransaction.replace(R.id.fragment_layout_1, new SettingsFragment());
     	fragmentTransaction.commit();
     }
     
-    public void EditFile()
-    {
+    public void EditFile() {
     	FragmentManager fragmentManager = getFragmentManager();
     	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
     	EditorFragment editorFragment = new EditorFragment();
 		editorFragment.GoToEditorFragment(fileName);
-		//editorFragment.SetConnection(threadInterface);
-		if(threadInterface != null)
-		{
+		if(threadInterface != null) {
 			threadInterface.setEditorFragment((EditorFragmentInterface)editorFragment);
 			editorFragment.SetConnection(threadInterface);
 			threadInterface.setEditorFragment((EditorFragmentInterface)editorFragment);
 		}
-		else
-		{
+		else {
 			Log.e("thrad interface is ", "null");
 		}
     	fragmentTransaction.replace(R.id.fragment_layout_1, editorFragment);
     	fragmentTransaction.commit();
-    	
-    	editing = true;
     }
 
 	@Override
@@ -321,14 +257,11 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	}
 	
 	@Override
-	public void setConnectionType(String s)
-	{
-		if(s == "TCP/IP")
-		{
+	public void setConnectionType(String s) {
+		if(s == "TCP/IP") {
 			TcpIpConnectionType();
 		}
-		else
-		{
+		else {
 			FragmentManager fragmentManager = getFragmentManager();
 	    	FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 	    	deviceListFragment = new DeviceListFragment();
@@ -338,66 +271,56 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 		}
 	}
     
-	private void TcpIpConnectionType()
-	{
-		
+	private void TcpIpConnectionType() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 		builder.setTitle("Choose mode");
 		final StringAdapter adapter = new StringAdapter();
 		adapter.setMasterOrSlaveList();
-		builder.setAdapter(adapter, new OnClickListener(){
+		builder.setAdapter(adapter, new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface arg0, int arg1) {
 				SetMasterOrSlaveTcpipConnection(String.valueOf(adapter.getItem(arg1)));
 			}
 		});
-		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			@Override
-			public void onClick(DialogInterface dialog, int which){
+			public void onClick(DialogInterface dialog, int which) {
 				dialog.cancel();
 			}
 		});
 		Dialog dialog = builder.create();
 		dialog.show();
-		
 	}
 	
-	private void SetMasterOrSlaveTcpipConnection(String str)
-	{
+	private void SetMasterOrSlaveTcpipConnection(String str) {
 		WifiDirectThread th = new WifiDirectThread();
 		threadInterface = (ThreadInterface) th;
-		if( ("Master").equals(str) )
-		{
-			th.Initialize("169.254.136.231", port, true);
+		if( ("Master").equals(str) ) {
+			th.Initialize("169.254.136.231", PORT, true);
 		}
-		else
-		{
-			th.Initialize("169.254.136.231", port, false);
+		else {
+			th.Initialize("169.254.136.231", PORT, false);
 		}
 	}
 	
-	private void WifiDirectConnectionType()
-	{
+	private void WifiDirectConnectionType() {
 		manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
                 Toast.makeText(MainActivity.this, "Finding Peers",
                         Toast.LENGTH_SHORT).show();
-                //manager.
             }
 
             @Override
             public void onFailure(int reasonCode) {
-                Toast.makeText(MainActivity.this, "Couldnt find peers ",
+                Toast.makeText(MainActivity.this, "Couldnt find peers",
                         Toast.LENGTH_SHORT).show();
             }
         });
 		
 		manager.requestPeers(channel, peerListListener);
-		
     	receiver = new WifiDirectBroadcastReceiver(manager, channel, this, deviceListFragment);
         registerReceiver(receiver, intentFilter);
-        
 	}
 
 	@Override
@@ -407,100 +330,69 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 
 	@Override
 	public void addFileToLog(String file) {
-		if(log == "")
-		{
+		if(("").equals(log)) {
 			log = "#file " + file;
 		}
-		else
-		{
+		else {
 			log +="\n#file " + file;
 		}
 	}
 
 	@Override
 	public void nowEditingFile(String file) {
-		if(log == "")
-		{
+		if(("").equals(log)) {
 			log = "#now " + file;
 		}
-		else
-		{
+		else {
 			log += "\n#now " + file;
 		}
 	}
-
-	@Override
-	public void setSocket(Socket s) {
-		socket = s;
-	}
 	
 	@Override
-	public void onStop()
-	{
+	public void onStop() {
 		if(threadInterface != null)
 			threadInterface.Stop();
 		
-		try
-		{if(receiver != null)
-		{
-			unregisterReceiver(receiver);
+		try {
+			if(receiver != null) {
+				unregisterReceiver(receiver);
+			}
 		}
-		}
-		catch(RuntimeException ex)
-		{
-			
+		catch(RuntimeException ex) {
 		}
 		super.onStop();
 	}
-/*
-	@Override
-	public void onPeersAvailable(WifiP2pDeviceList peerList) {
-		for (WifiP2pDevice device : peerList.getDeviceList()) {
-            //this.device = device;
-			peers.add(device);
-            Toast.makeText(MainActivity.this, "Device found",
-                    Toast.LENGTH_SHORT).show();
-            break;
-        }
-	}
-*/
+
 	@Override
 	public void onConnectionInfoAvailable(WifiP2pInfo info) {
 		String infoname = info.groupOwnerAddress.toString();
 		IP = infoname.substring(1);
-        //Toast.makeText(MainActivity.this, IP,
-        //        Toast.LENGTH_SHORT).show();
-    	WifiDirectThread wifiDirectThread = new WifiDirectThread();
+		WifiDirectThread wifiDirectThread = new WifiDirectThread();
     	threadInterface = (ThreadInterface) wifiDirectThread;
-    	threadInterface.Initialize(IP, port, info.isGroupOwner);
+    	threadInterface.Initialize(IP, PORT, info.isGroupOwner);
     	try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void showDetails(WifiP2pDevice device) {
-		
-		
 	}
 
 	@Override
 	public void cancelDisconnect() {
-
         if (manager != null) {
             final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
                     .findFragmentById(R.id.device_list);
             if (fragment.getDevice() == null
                     || fragment.getDevice().status == WifiP2pDevice.CONNECTED) {
                 disconnect();
-            } else if (fragment.getDevice().status == WifiP2pDevice.AVAILABLE
+            }
+            else if (fragment.getDevice().status == WifiP2pDevice.AVAILABLE
                     || fragment.getDevice().status == WifiP2pDevice.INVITED) {
-
                 manager.cancelConnect(channel, new ActionListener() {
-
                     @Override
                     public void onSuccess() {
                         Toast.makeText(activity, "Aborting connection",
@@ -516,20 +408,13 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
                 });
             }
         }
-
-
     }
 
     @Override
     public void connect(WifiP2pConfig config) {
-    	//TODO aasd
         manager.connect(channel, config, new ActionListener() {
-        	
             @Override
             public void onSuccess() {
-                // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
-            	Toast.makeText(activity, "Connected!", Toast.LENGTH_SHORT).show();
-            	
             }
 
             @Override
@@ -541,33 +426,28 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 
 	@Override
 	public void disconnect() {
-		manager.removeGroup(channel, new ActionListener(){
-
+		manager.removeGroup(channel, new ActionListener() {
 			@Override
 			public void onFailure(int arg0) {
-				Toast.makeText(activity, "disconection failed.", Toast.LENGTH_SHORT).show();
-				
+				Toast.makeText(activity, "Disconection failed.", Toast.LENGTH_SHORT).show();
 			}
 
 			@Override
 			public void onSuccess() {
-				Toast.makeText(activity, "Disconected", Toast.LENGTH_SHORT).show();
+				Toast.makeText(activity, "Disconected.", Toast.LENGTH_SHORT).show();
 				
 			}
-			
 		});
-		
 	}
-
 
     @Override
     public void onChannelDisconnected() {
-        // we will try once more
         if (manager != null && !retryChannel) {
             Toast.makeText(this, "Channel lost. Trying again", Toast.LENGTH_LONG).show();
             retryChannel = true;
             manager.initialize(this, getMainLooper(), this);
-        } else {
+        }
+        else {
             Toast.makeText(this,
                     "Severe! Channel is probably lost premanently. Try Disable/Re-Enable P2P.",
                     Toast.LENGTH_LONG).show();
@@ -581,11 +461,11 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
     	fragmentTransaction.replace(R.id.fragment_layout_1, deviceListFragment);
     	fragmentTransaction.commit();
 	}
+
+	@Override
+	public void setSocket(Socket s) {
+	}
 }
-
-
-
-
 
 class TcpipWriteThread implements Runnable {
 	Thread runner;
@@ -593,15 +473,12 @@ class TcpipWriteThread implements Runnable {
 	private String IP;
 	private int port;
 	private Socket kkSocket;
-	private SocketsInterface si;//tym interfejsem przesy³amy dane do MainActivity
+	private SocketsInterface si;
 	private boolean GO = true;
-	public Object ToLock = new Object();//synchronizacja w¹tków
+	public Object ToLock = new Object();
 	private String data_to_send = "";
-	
-	
-	
-	public TcpipWriteThread(String threadName, String logg, String IPP, int portt, Activity a)
-	{
+		
+	public TcpipWriteThread(String threadName, String logg, String IPP, int portt, Activity a) {
 		si = (SocketsInterface) a;
 		IP = IPP;
 		port = portt;
@@ -613,87 +490,61 @@ class TcpipWriteThread implements Runnable {
 	
 	@Override
 	public void run() {
-		try
-		{
+		try {
 			kkSocket = new Socket(IP, port);
 			PrintWriter out = new PrintWriter(kkSocket.getOutputStream(), true);
-			if(!log.equals(""))
-			{
+			if(!log.equals("")) {
 				String[] logLine = log.split("\n");
 				String[] command;
-				for(int q = 0; q < logLine.length; q++)
-				{
+				for(int q = 0; q < logLine.length; q++) {
 					out.println(logLine[q]);
 					out.flush();
 					command = logLine[q].split(" ");
-					if(command[0].equals("#file"))
-					{
+					if(command[0].equals("#file")) {
 						out.println(EditorFragment.getStringFromFile(command[1]));
 						out.flush();
-						Thread.sleep(10000);//wait for receiver received file
+						Thread.sleep(10000);
 					}
 				}
 			}
 			si.resetLog("reset");
-			while(GO)
-			{
-				//send data
-				synchronized(ToLock)
-				{
-					if( !("").equals(data_to_send) )
-					{
+			while(GO) {
+				synchronized(ToLock) {
+					if( !("").equals(data_to_send) ) {
 						out.println(data_to_send);
 						out.flush();
 						data_to_send = "";
 					}
 				}
-				Thread.sleep(300);//¿eby metoda TrySendData mia³a siê jak wstrzeliæ
+				Thread.sleep(300);
 			}
-			
-			
 			out.close();
 			kkSocket.close();
 		}
-		catch(Exception ex)
-		{
+		catch(Exception ex) {
 			Log.e("Error in TcpipWriteThread:", String.valueOf(ex));
 		}
-		
+		finally {
+		}
 	}
 	
-	public void Stop()
-	{
+	public void Stop() {
 		GO = false;
 	}
 	
-	public void TrySendData(String data)
-	{
-		synchronized(ToLock)
-		{
-			if( ("").equals(data_to_send) )
-			{
+	public void TrySendData(String data) {
+		synchronized(ToLock) {
+			if( ("").equals(data_to_send) ) {
 				data_to_send = data;
 			}
-			else
-			{
+			else {
 				data_to_send += "\n" + data;
 			}
 		}
 	}
-	
-	
 }
 
-
-
-
-
-
-
-
-//group owner pisze pierwszy
 class WifiDirectThread implements Runnable, ThreadInterface {
-
 	Thread runner;
 	private Socket socket;
 	private int port = 8988;
@@ -703,67 +554,54 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 	public Object ToLock = new Object();
 	private String DataToSend = "";
 	private EditorFragmentInterface editorFragmentInterface = null;
-	//private Intent intent;
 	
-	public WifiDirectThread()
-	{
+	public WifiDirectThread() {
 	}
 	
 	@Override
 	public void run() {
-		if(!isGroupOwner)
-		{
+		if(!isGroupOwner) {
 			try {
 				socket = new Socket();
 				socket.bind(null);
-				//socket.
+
 				Thread.sleep(3000);
 				socket.connect(new InetSocketAddress(IP, port));
 				Log.e("connected", "as slave");
 				PrintWriter writer = new PrintWriter(socket.getOutputStream());
 				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				while(GO)
-				{
+				while(GO) {
 					String str = reader.readLine();
-					if( ("#exit").equals(str) )
-					{
+					if( ("#exit").equals(str) ) {
 						GO = false;
 						
 					}
-					else if( ("#noAction").equals(str) )
-					{
-						//Log.e("tag", "#noAction");
+					else if( ("#noAction").equals(str) ) {
 					}
-					else if (str != null && !("").equals(str))
-					{
-						if(editorFragmentInterface != null)
-						{
+					else if (str != null && !("").equals(str)) {
+						if(editorFragmentInterface != null) {
 							Log.i("str", str);
 							EditorFragment.pressed_key = false;
 							editorFragmentInterface.SendData(str);
 						}
-						else
-						{
+						else {
 							Log.e("tag", str + " " + editorFragmentInterface.toString());
 						}
-						//TODO implement writedata
 					}
 					Thread.sleep(300);
 					
-					synchronized(ToLock)
-					{
-						if(!("").equals(DataToSend))
-						{
-							if(GO)
-							writer.println(DataToSend);
-							DataToSend = "";
+					synchronized(ToLock) {
+						if(!("").equals(DataToSend)) {
+							if(GO) {
+								writer.println(DataToSend);
+								DataToSend = "";
+							}
 						}
-						else
-						{
-							if(GO)
-							writer.println("#noAction");
+						else {
+							if(GO) {
+								writer.println("#noAction");
+							}
 						}
-						//Log.e("tag", "toLock");
 					}
 					writer.flush();
 					Thread.sleep(300);
@@ -772,80 +610,59 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 				writer.close();
 				socket.close();
 			} catch (IOException e) {
-				// 
 				e.printStackTrace();
 			} catch (InterruptedException e) {
-				// 
 				e.printStackTrace();
 			}
 		}
-		else
-		{
+		else {
 			try {
 				ServerSocket ss;
 				ss = new ServerSocket(port);
 				socket = ss.accept();
 				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				PrintWriter writer = new PrintWriter(socket.getOutputStream());
-				while(GO)
-				{
-					synchronized(ToLock)
-					{
-						if(!("").equals(DataToSend))
-						{
+				while(GO) {
+					synchronized(ToLock) {
+						if(!("").equals(DataToSend)) {
 							writer.println(DataToSend);
 							DataToSend = "";
 						}
-						else
-						{
+						else {
 							writer.println("#noAction");
 						}
 					}
 					writer.flush();
 					Thread.sleep(300);
 					String str = reader.readLine();
-					if( ("#exit").equals(str) )
-					{
+					if( ("#exit").equals(str) ) {
 						GO = false;
-						
 					}
-					else if( ("#noAction").equals(str) )
-					{
-						
+					else if( ("#noAction").equals(str) ) {
 					}
-					else if (str != null && !("").equals(str))
-					{
-						if(editorFragmentInterface != null)
-						{
+					else if (str != null && !("").equals(str)) {
+						if(editorFragmentInterface != null) {
 							EditorFragment.pressed_key = false;
 							editorFragmentInterface.SendData(str);
 						}
-						else
-						{
-							//e
+						else {
 							Log.e("tag", str + " " + editorFragmentInterface.toString());
 						}
-						
-						//TODO implement writedata
 					}
 					Thread.sleep(300);
 				}
 				reader.close();
 				writer.close();
 				socket.close();
-				
 			} catch (IOException e) {
-				// 
 				e.printStackTrace();
 			} catch (InterruptedException e) {
-				// 
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	public void Stop()
-	{
+	public void Stop() {
 		GO = false;
 		DataToSend += "#exit";
 	}
@@ -861,18 +678,14 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 
 	@Override
 	public void TrySendData(String data) {
-		synchronized(ToLock)
-		{
-			if(("").equals(DataToSend))
-			{
+		synchronized(ToLock) {
+			if(("").equals(DataToSend)) {
 				DataToSend = data;
 			}
-			else
-			{
+			else {
 				DataToSend += "\r\n" + data;
 			}
 		}
-		
 	}
 
 	@Override
@@ -881,27 +694,7 @@ class WifiDirectThread implements Runnable, ThreadInterface {
 	}
 
 	@Override
-	public void setEditorFragment(
-			EditorFragmentInterface editorFragmentInterface) {
+	public void setEditorFragment(EditorFragmentInterface editorFragmentInterface) {
 		this.editorFragmentInterface = editorFragmentInterface;
 	}
-
-
-	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
