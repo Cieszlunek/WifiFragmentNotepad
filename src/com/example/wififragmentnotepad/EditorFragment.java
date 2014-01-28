@@ -26,6 +26,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 	private EditText editText;
 	private String fileName;
 	private boolean enter_is_pressed;
+	private boolean backspaceIsPressed;
 	
 	private static ThreadInterface threadInterface = null;
 	public static boolean pressed_key = true;
@@ -35,6 +36,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		View view = inflater.inflate(R.layout.editor_fragment, container, false);
 		editText = (EditText) view.findViewById(R.id.editorText);
 		enter_is_pressed = false;
+		backspaceIsPressed = false;
 		LoadFile();
 		return view;
 	}
@@ -88,6 +90,7 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 		            	return true;	
 	        		}
 	            	else if(event.getKeyCode() == KeyEvent.KEYCODE_DEL) {
+	            		backspaceIsPressed = true;
 	            		if(threadInterface != null) {
 	        				threadInterface.TrySendData("backspace," + editText.getSelectionStart());
 	        			}
@@ -157,6 +160,10 @@ public class EditorFragment extends Fragment implements EditorFragmentInterface 
 				int arg3) {
 			if(enter_is_pressed) {
 				enter_is_pressed = false;
+				return;
+			}
+			if (backspaceIsPressed) {
+				backspaceIsPressed = false;
 				return;
 			}
 			if(threadInterface != null && pressed_key) {
