@@ -10,6 +10,8 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import android.R.integer;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -56,6 +58,7 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	private Channel channel;
 	private BroadcastReceiver receiver;
 	private PeerListListener peerListListener;
+	private WifiDirectThread th;
 	
 	private final int PORT = 8988;
 	private final IntentFilter intentFilter = new IntentFilter();
@@ -293,13 +296,50 @@ public class MainActivity extends Activity implements onEditEventListener, Conne
 	}
 	
 	private void SetMasterOrSlaveTcpipConnection(String str) {
-		WifiDirectThread th = new WifiDirectThread();
+		th = new WifiDirectThread();
 		threadInterface = (ThreadInterface) th;
 		if( ("Master").equals(str) ) {
 			th.Initialize("169.254.136.231", PORT, true);
 		}
 		else {
-			th.Initialize("169.254.136.231", PORT, false);
+			//slave
+			IP = "192.168.1.100";
+			AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+			builder.setTitle("Enter master IP adress");
+			final EditText input = new EditText(activity);
+			input.setText(IP);
+			input.setInputType(InputType.TYPE_CLASS_TEXT);
+			builder.setView(input);
+			builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which){
+					IP = input.getText().toString();
+					try
+					{
+						String[] ip_blocks = IP.split(".");
+						
+						//if(ip_blocks.length == 4)
+						//{
+							th.Initialize(IP, PORT, false);
+						//}
+						//else
+						//{
+						//	Toast.makeText(activity, "Connection failed. Does IP is correct?", Toast.LENGTH_SHORT).show();
+						//}
+					}
+					catch(Exception ex) { 
+						Toast.makeText(activity, "Connection failed. Does IP is correct?", Toast.LENGTH_SHORT).show();
+					}
+				}
+			});
+			builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which){
+					dialog.cancel();
+				}
+			});
+			Dialog dialog = builder.create();
+			dialog.show();
 		}
 	}
 	

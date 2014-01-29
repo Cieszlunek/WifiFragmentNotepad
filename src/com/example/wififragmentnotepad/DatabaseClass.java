@@ -2,7 +2,6 @@ package com.example.wififragmentnotepad;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseClass extends SQLiteOpenHelper{

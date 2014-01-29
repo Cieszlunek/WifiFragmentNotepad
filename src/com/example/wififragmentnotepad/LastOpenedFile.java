@@ -1,8 +1,5 @@
 package com.example.wififragmentnotepad;
 
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 public class LastOpenedFile {
 	private String name;
